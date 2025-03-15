@@ -100,6 +100,16 @@ document.addEventListener('DOMContentLoaded', () => {
     document.querySelector('.back-btn')?.addEventListener('click', toggleContactForm);
     document.querySelector('.close-popup')?.addEventListener('click', togglePopup);
     backToTop?.addEventListener('click', scrollToTop);
+    document.querySelectorAll('.contact-btn').forEach(btn => {
+        btn.addEventListener('click', createRipple); // 保留波紋效果
+        if (btn.textContent === '聯絡我') {
+            btn.addEventListener('click', toggleContactForm);
+        } else if (btn.textContent === 'Github') {
+            btn.addEventListener('click', () => {
+                window.open('https://github.com/jerrylin1102', '_blank'); // 新頁面開啟連結
+            });
+        }
+    });
 
     updateTime();
     setInterval(updateTime, 1000);

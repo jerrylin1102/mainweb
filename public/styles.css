@@ -58,7 +58,14 @@ p {
     from { opacity: 0; transform: translateY(20px); }
     to { opacity: 1; transform: translateY(0); }
 }
+.contact-btn {
+    margin: 5px; /* 為每個 contact-btn 添加間距 */
+}
 
+.contact-btn:nth-child(2) {
+    /* 可選：為第二個按鈕（Github）添加特定樣式，例如不同顏色 */
+    background: linear-gradient(45deg, #6f42c1, #d9534f, #6f42c1); /* 紫色和紅色漸層 */
+}
 .dynamic-button {
     position: relative;
     display: block;
@@ -263,16 +270,14 @@ p {
 }
 
 .visitor-counter {
-    position: fixed;
-    bottom: 10px;
-    left: 50%;
-    transform: translateX(-50%);
     font-size: clamp(12px, 2vw, 14px);
     color: white;
     opacity: 0.9;
     text-align: center;
     z-index: 1;
-    padding: 0 10px; /* 增加內邊距，避免裁切 */
+    padding: 5px 15px;
+    border-radius: 5px;
+    margin: 10px 0 0 0;
 }
 
 /* 太空動畫樣式 */
@@ -341,7 +346,7 @@ p {
     width: 14px;
     left: 2px;
     top: 0;
-    background: #aaa;
+    background: #fbff00;
     animation: flag-unfurl 12s cubic-bezier(0.645, 0.045, 0.355, 1) infinite;
 }
 
