@@ -98,6 +98,12 @@ const updateGreeting = () => {
     }
 };
 
+const toggleTheme = () => {
+    document.body.classList.toggle('dark-mode');
+    const isDarkMode = document.body.classList.contains('dark-mode');
+    localStorage.setItem('theme', isDarkMode ? 'dark' : 'light');
+};
+
 document.addEventListener('DOMContentLoaded', () => {
     document.querySelectorAll('.contact-btn').forEach(btn => {
         btn.addEventListener('click', createRipple);
@@ -115,8 +121,32 @@ document.addEventListener('DOMContentLoaded', () => {
     document.querySelector('.close-popup')?.addEventListener('click', togglePopup);
     backToTop?.addEventListener('click', scrollToTop);
 
+    const savedTheme = localStorage.getItem('theme');
+    if (savedTheme === 'dark') {
+        document.body.classList.add('dark-mode');
+    }
+    document.querySelector('.theme-toggle')?.addEventListener('click', toggleTheme);
+
     updateTime();
     setInterval(updateTime, 1000);
     updateVisitorCount();
     updateGreeting();
+
+    const starsContainer = document.querySelector('.stars-container');
+    const starCount = 50;
+    for (let i = 0; i < starCount; i++) {
+        const star = document.createElement('div');
+        star.classList.add('star');
+        const size = Math.random() * 3 + 1;
+        star.style.width = `${size}px`;
+        star.style.height = `${size}px`;
+        star.style.left = `${Math.random() * 100}%`;
+        star.style.top = `${Math.random() * 100}%`;
+        const dx = (Math.random() - 0.5) * 200;
+        const dy = (Math.random() - 0.5) * 200;
+        star.style.setProperty('--dx', `${dx}px`);
+        star.style.setProperty('--dy', `${dy}px`);
+        star.style.animationDuration = `${Math.random() * 5 + 5}s`;
+        starsContainer.appendChild(star);
+    }
 });

@@ -26,36 +26,45 @@ app.use(cors());
 app.use(express.static(path.join(__dirname, 'public')));
 
 const visitorCountFile = path.join(__dirname, 'visitorCount.json');
-if (!fs.existsSync(visitorCountFile)) {
-    fs.writeFileSync(visitorCountFile, JSON.stringify({ count: 0 }));
-}
+let visitorCount = 0;
 
-const getVisitorCount = () => {
+// 初次啟動時從文件載入計數
+const loadVisitorCount = () => {
     try {
-        const data = fs.readFileSync(visitorCountFile, 'utf8');
-        return JSON.parse(data).count || 0;
+        if (fs.existsSync(visitorCountFile)) {
+            const data = fs.readFileSync(visitorCountFile, 'utf8');
+            const visitorData = JSON.parse(data);
+            visitorCount = visitorData.count || 0;
+        } else {
+            fs.writeFileSync(visitorCountFile, JSON.stringify({ count: 0 }));
+        }
     } catch (err) {
-        console.error('讀取 visitorCount.json 失敗:', err.message);
-        return 0;
+        console.error('載入訪客計數失敗:', err.message);
+        visitorCount = 0;
     }
 };
 
-const updateVisitorCount = () => {
-    const currentCount = getVisitorCount();
-    const newCount = currentCount + 1;
+// 定期將計數寫入文件（每 5 分鐘）
+const saveVisitorCount = () => {
     try {
-        fs.writeFileSync(visitorCountFile, JSON.stringify({ count: newCount }));
-        return newCount;
+        fs.writeFileSync(visitorCountFile, JSON.stringify({ count: visitorCount }));
+        console.log('計數已持久化:', visitorCount);
     } catch (err) {
-        console.error('寫入 visitorCount.json 失敗:', err.message);
-        return currentCount;
+        console.error('持久化訪客計數失敗:', err.message);
     }
 };
 
+// 初次載入計數
+loadVisitorCount();
+
+// 每 5 分鐘持久化一次
+setInterval(saveVisitorCount, 5 * 60 * 1000);
+
+// 處理訪客計數請求
 app.get('/visitor-count', (req, res) => {
     try {
-        const count = updateVisitorCount();
-        res.json({ count });
+        visitorCount += 1; // 直接在記憶體中增加計數
+        res.json({ count: visitorCount });
     } catch (err) {
         console.error('處理 /visitor-count 失敗:', err.message);
         res.status(500).json({ error: '無法更新訪客計數' });
@@ -85,5 +94,11 @@ bot.on('message', (msg) => {
 app.get('/', (req, res) => res.sendFile(path.join(__dirname, 'public', 'index.html')));
 
 app.use((req, res) => res.status(404).send('Not Found'));
+
+// 伺服器關閉時保存計數
+process.on('SIGINT', () => {
+    saveVisitorCount();
+    process.exit();
+});
 
 app.listen(port, () => console.log(`伺服器運行於 http://localhost:${port}`));

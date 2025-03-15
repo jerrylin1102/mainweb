@@ -20,6 +20,8 @@
     <link rel="icon" type="image/x-icon" href="/favicon.ico">
 </head>
 <body>
+    <div class="stars-container"></div>
+    <button class="dynamic-button theme-toggle">切換主題</button>
     <div class="container">
         <h1>歡迎來到 Jerry 的小窩</h1>
         <p>早安你好</p>
@@ -27,6 +29,7 @@
         <button class="dynamic-button contact-btn">聯絡我</button>
         <button class="dynamic-button contact-btn">Github</button>
         <p class="time-display">現在時間：<span id="current-time"></span></p>
+        <p class="visitor-counter">訪客數：<span id="visitor-count">載入中...</span></p>
     </div>
 
     <div class="overlay"></div>
@@ -51,35 +54,6 @@
         <p>如果我看到就會回！</p>
         <button class="dynamic-button close-popup">關閉</button>
     </div>
-
-    <!-- 太空動畫（左下角） -->
-    <div class="space-animation">
-        <div class="space">
-            <div class="ship">
-                <div class="ship-rotate">
-                    <div class="pod"></div>
-                    <div class="fuselage"></div>
-                </div>
-            </div>
-            <div class="ship-shadow"></div>
-            <div class="mars">
-                <div class="tentacle"></div>
-                <div class="flag">
-                    <div class="small-tentacle"></div>
-                </div>
-                <div class="planet">
-                    <div class="surface"></div>
-                    <div class="crater1"></div>
-                    <div class="crater2"></div>
-                    <div class="crater3"></div>
-                </div>
-            </div>
-            <div class="mini-ships-container"></div>
-        </div>
-    </div>
-
-    <!-- 訪客數 -->
-    <p class="visitor-counter">訪客數：<span id="visitor-count">載入中...</span></p>
 
     <script src="./scripts.js"></script>
 </body>
