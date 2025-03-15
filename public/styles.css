@@ -1,0 +1,626 @@
+* {
+    margin: 0;
+    padding: 0;
+    box-sizing: border-box;
+}
+
+html, body {
+    height: 100%;
+    font-family: Arial, sans-serif;
+    overflow: auto;
+    position: relative;
+}
+
+body {
+    display: flex;
+    justify-content: center;
+    align-items: center;
+    background: linear-gradient(320deg, #4144fc, #7beafe, #db49ff, #225dff);
+    background-size: 400% 400%;
+    animation: gradientBG 5s ease infinite;
+}
+
+@keyframes gradientBG {
+    0% { background-position: 0% 0%; }
+    50% { background-position: 100% 100%; }
+    100% { background-position: 0% 0%; }
+}
+
+.container {
+    text-align: center;
+    padding: 20px;
+    max-width: 600px;
+    color: white;
+    width: 100%; /* 確保容器在小螢幕上佔滿寬度 */
+}
+
+h1 {
+    font-size: clamp(24px, 5vw, 36px);
+    text-transform: uppercase;
+    margin-bottom: 15px;
+    animation: fadeInUp 1s ease forwards;
+}
+
+p {
+    font-size: clamp(16px, 3vw, 18px);
+    margin: 10px 0;
+    animation: fadeInUp 1s ease forwards 0.3s;
+}
+
+.greeting {
+    font-size: clamp(14px, 3vw, 16px);
+    margin: 15px 0;
+    color: rgba(255, 255, 255, 0.9);
+    animation: fadeInUp 1s ease forwards 0.5s;
+}
+
+@keyframes fadeInUp {
+    from { opacity: 0; transform: translateY(20px); }
+    to { opacity: 1; transform: translateY(0); }
+}
+
+.dynamic-button {
+    position: relative;
+    display: block;
+    width: clamp(140px, 40vw, 200px); /* 按鈕寬度適應螢幕 */
+    padding: 12px 24px;
+    margin: 10px auto;
+    font-size: clamp(14px, 3vw, 18px); /* 字體大小適應螢幕 */
+    color: white;
+    background: linear-gradient(45deg, #ff416c, #ff4b2b, #1e90ff, #00ced1, #ff416c);
+    background-size: 600% 600%;
+    border: none;
+    border-radius: 25px;
+    cursor: pointer;
+    font-weight: bold;
+    animation: gradientShift 4s ease infinite;
+    transition: all 0.3s ease;
+}
+
+.dynamic-button:hover {
+    transform: translateY(-3px);
+    box-shadow: 0 5px 20px rgba(0, 0, 0, 0.4);
+    animation-play-state: paused;
+}
+
+@keyframes gradientShift {
+    0% { background-position: 0% 50%; }
+    50% { background-position: 100% 50%; }
+    100% { background-position: 0% 50%; }
+}
+
+.ripple {
+    position: absolute;
+    border-radius: 50%;
+    background: rgba(255, 255, 255, 0.4);
+    transform: scale(0);
+    animation: ripple 0.6s linear;
+    pointer-events: none;
+}
+
+@keyframes ripple {
+    to { transform: scale(4); opacity: 0; }
+}
+
+.contact-form {
+    position: fixed;
+    top: 50%;
+    left: 50%;
+    transform: translate(-50%, -50%) scale(0.8);
+    background: linear-gradient(135deg, rgba(255, 255, 255, 0.95), rgba(240, 240, 255, 0.9));
+    padding: 30px;
+    border-radius: 15px;
+    width: 90%;
+    max-width: 450px;
+    opacity: 0;
+    visibility: hidden;
+    transition: all 0.3s ease;
+    z-index: 10;
+    box-shadow: 0 15px 40px rgba(0, 0, 0, 0.3);
+    border: 1px solid rgba(255, 255, 255, 0.2);
+}
+
+.contact-form.active {
+    transform: translate(-50%, -50%) scale(1);
+    opacity: 1;
+    visibility: visible;
+}
+
+.contact-form h2 {
+    color: #333;
+    margin-bottom: 20px;
+    font-size: clamp(18px, 5vw, 24px); /* 表單標題適應螢幕 */
+    text-align: center;
+    animation: fadeInUp 0.5s ease forwards;
+}
+
+.contact-form input,
+.contact-form textarea {
+    width: 100%;
+    margin: 12px 0;
+    padding: 12px;
+    border: 1px solid #ddd;
+    border-radius: 8px;
+    font-size: clamp(12px, 3vw, 16px); /* 輸入框字體適應螢幕 */
+    background: rgba(255, 255, 255, 0.8);
+    transition: border-color 0.3s ease;
+}
+
+.contact-form input:focus,
+.contact-form textarea:focus {
+    border-color: #1e90ff;
+    outline: none;
+}
+
+.contact-form .form-buttons {
+    display: flex;
+    flex-direction: column;
+    align-items: center;
+    margin-top: 20px;
+}
+
+.contact-form .back-btn {
+    background: linear-gradient(45deg, #6c757d, #adb5bd, #6c757d);
+    width: clamp(140px, 40vw, 200px); /* 返回按鈕寬度適應螢幕 */
+}
+
+.contact-form .form-status {
+    margin-top: 15px;
+    color: #333;
+    font-size: clamp(12px, 3vw, 14px); /* 狀態文字適應螢幕 */
+    text-align: center;
+}
+
+.overlay {
+    position: fixed;
+    top: 0;
+    left: 0;
+    width: 100%;
+    height: 100%;
+    background: rgba(0, 0, 0, 0.6);
+    opacity: 0;
+    visibility: hidden;
+    transition: opacity 0.3s ease;
+    z-index: 5;
+}
+
+.overlay.active {
+    opacity: 1;
+    visibility: visible;
+}
+
+.back-to-top {
+    position: fixed;
+    bottom: 20px;
+    right: 20px;
+    width: 40px;
+    height: 40px;
+    background: rgba(255, 255, 255, 0.3);
+    border: none;
+    border-radius: 50%;
+    cursor: pointer;
+    display: none;
+    color: white;
+    font-size: 20px;
+}
+
+.popup-overlay {
+    position: fixed;
+    top: 0;
+    left: 0;
+    width: 100%;
+    height: 100%;
+    background: rgba(0, 0, 0, 0.5);
+    opacity: 0;
+    visibility: hidden;
+    transition: opacity 0.3s ease;
+    z-index: 15;
+}
+
+.popup-overlay.active {
+    opacity: 1;
+    visibility: visible;
+}
+
+.popup {
+    position: fixed;
+    top: 50%;
+    left: 50%;
+    transform: translate(-50%, -50%) scale(0.8);
+    background: linear-gradient(135deg, #ffffff, #f0f0ff);
+    padding: 20px;
+    border-radius: 10px;
+    width: 90%;
+    max-width: 300px;
+    text-align: center;
+    opacity: 0;
+    visibility: hidden;
+    transition: all 0.3s ease;
+    z-index: 20;
+    box-shadow: 0 10px 30px rgba(0, 0, 0, 0.2);
+}
+
+.popup.active {
+    transform: translate(-50%, -50%) scale(1);
+    opacity: 1;
+    visibility: visible;
+}
+
+.popup p {
+    color: #333;
+    font-size: clamp(14px, 3vw, 18px); /* 彈窗文字適應螢幕 */
+    margin-bottom: 20px;
+}
+
+.popup .close-popup {
+    width: clamp(100px, 30vw, 120px); /* 關閉按鈕寬度適應螢幕 */
+}
+
+.time-display {
+    font-size: clamp(12px, 2vw, 14px);
+    margin-top: 20px;
+    opacity: 0.9;
+}
+
+.visitor-counter {
+    position: fixed;
+    bottom: 10px;
+    left: 50%;
+    transform: translateX(-50%);
+    font-size: clamp(12px, 2vw, 14px);
+    color: white;
+    opacity: 0.9;
+    text-align: center;
+    z-index: 1;
+    padding: 0 10px; /* 增加內邊距，避免裁切 */
+}
+
+/* 太空動畫樣式 */
+.space-animation {
+    position: fixed;
+    bottom: 20px;
+    left: 20px;
+    width: clamp(120px, 25vw, 200px); /* 動畫寬度適應螢幕 */
+    height: clamp(120px, 25vw, 200px); /* 動畫高度適應螢幕 */
+    z-index: 1;
+    overflow: visible; /* 確保動畫內容不被裁切 */
+}
+
+.space {
+    position: absolute;
+    top: 0;
+    left: 0;
+    width: 100%;
+    height: 100%;
+    overflow: visible; /* 移除裁切限制 */
+}
+
+.space .mars {
+    position: absolute;
+    top: 50%;
+    left: 50%;
+    z-index: 2;
+    transform: translate(-50%, -50%) scale(0.9); /* 縮放星球，避免溢出 */
+}
+
+.space .mars .tentacle {
+    position: absolute;
+    top: -60px;
+    right: -80px;
+    z-index: 1;
+    height: 70px;
+    width: 70px;
+    box-sizing: border-box;
+    border-radius: 100%;
+    border-left: 15px solid #1aae1e;
+    transform: rotate(-30deg);
+    animation: tentacle 12s cubic-bezier(0.645, 0.045, 0.355, 1) infinite;
+}
+
+.space .mars .flag {
+    position: absolute;
+    height: 17px;
+    width: 15px;
+    top: -57px;
+    left: -1px;
+    animation: flag-pole 12s cubic-bezier(0.645, 0.045, 0.355, 1) infinite;
+}
+
+.space .mars .flag:before {
+    content: "";
+    position: absolute;
+    height: 17px;
+    width: 2px;
+    background: #eee;
+}
+
+.space .mars .flag:after {
+    content: "";
+    position: absolute;
+    height: 10px;
+    width: 14px;
+    left: 2px;
+    top: 0;
+    background: #aaa;
+    animation: flag-unfurl 12s cubic-bezier(0.645, 0.045, 0.355, 1) infinite;
+}
+
+.space .mars .flag .small-tentacle {
+    position: absolute;
+    left: -16px;
+    top: 3px;
+    height: 50px;
+    width: 50px;
+    border-left: 10px solid #1aae1e;
+    border-radius: 100%;
+    transform: rotate(25deg);
+    animation: small-tentacle 12s cubic-bezier(0.645, 0.045, 0.355, 1) infinite;
+    z-index: 2;
+}
+
+.space .mars:before {
+    content: "";
+    position: absolute;
+    top: 80px;
+    left: -30px;
+    height: 10px;
+    width: 60px;
+    background: #374d5c3a;
+    border-radius: 100%;
+}
+
+.space .mars .planet {
+    box-sizing: border-box;
+    position: absolute;
+    border-radius: 100%;
+    height: 120px;
+    width: 120px;
+    overflow: hidden;
+    margin-left: -60px;
+    margin-top: -60px;
+    z-index: 2;
+}
+
+.space .mars .planet .surface {
+    position: absolute;
+    border-radius: 100%;
+    height: 140%;
+    width: 140%;
+    top: -30%;
+    right: -10%;
+    box-sizing: border-box;
+    border: 30px solid rgba(0,0,0,.15);
+    background: #ff5f40;
+}
+
+.space .mars .planet .crater1,
+.space .mars .planet .crater2,
+.space .mars .planet .crater3 {
+    position: absolute;
+    border-radius: 100%;
+    background: rgba(0,0,0,.15);
+    box-shadow: inset 3px 3px 0 rgba(0,0,0,.2);
+}
+
+.space .mars .planet .crater1 {
+    height: 20px;
+    width: 20px;
+    top: 32%;
+    left: 17%;
+}
+
+.space .mars .planet .crater2 {
+    height: 10px;
+    width: 10px;
+    top: 26%;
+    left: 55%;
+    box-shadow: inset 2px 2px 0 rgba(0,0,0,.2);
+}
+
+.space .mars .planet .crater3 {
+    height: 10px;
+    width: 10px;
+    top: 60%;
+    left: 40%;
+    box-shadow: inset 2px 2px 0 rgba(0,0,0,.2);
+}
+
+.space .ship {
+    position: absolute;
+    right: 50%;
+    top: 50%;
+    margin-top: -55px;
+    margin-right: -55px;
+    height: 22px;
+    background: rgba(0,0,0,.1);
+    transform-origin: 0% 100% 0;
+    z-index: 1;
+    animation: ship 12s cubic-bezier(0.645, 0.045, 0.355, 1) infinite;
+}
+
+.space .ship .ship-rotate {
+    position: absolute;
+    height: 22px;
+    transform: rotate(-110deg);
+    animation: ship-rotate 12s cubic-bezier(0.645, 0.045, 0.355, 1) infinite;
+}
+
+.space .ship .ship-rotate .pod {
+    position: absolute;
+    top: 0;
+    left: -8px;
+    height: 16px;
+    width: 16px;
+    background: #eee;
+    border-radius: 100% 0 100% 0;
+    transform: rotate(-45deg);
+}
+
+.space .ship .ship-rotate .fuselage {
+    position: absolute;
+    top: 14px;
+    left: -6px;
+    height: 8px;
+    width: 12px;
+    background: #eee;
+    border-radius: 100% 100% 0 0;
+}
+
+.space .ship .ship-rotate .fuselage:after {
+    content: "";
+    position: absolute;
+    left: 2px;
+    top: 100%;
+    width: 0;
+    height: 0;
+    border-left: 4px solid transparent;
+    border-right: 4px solid transparent;
+    border-top: 6px solid red;
+}
+
+.space .ship-shadow {
+    position: absolute;
+    right: 10%;
+    top: 50%;
+    margin-right: -28px;
+    margin-top: 83px;
+    height: 4px;
+    width: 16px;
+    background: #374d5c15;
+    border-radius: 100%;
+    animation: ship-shadow 12s cubic-bezier(0.645, 0.045, 0.355, 1) infinite;
+}
+
+@keyframes small-tentacle {
+    0%   { transform: rotate(-60deg); }
+    86%  { transform: rotate(-60deg); }
+    89%  { transform: rotate(10deg); }
+    100% { transform: rotate(10deg); }
+}
+
+@keyframes tentacle {
+    0%    { transform: rotate(-30deg); }
+    75%   { transform: rotate(-30deg); }
+    80%   { transform: rotate(-165deg) translate(6px, 8px); }
+    82.5% { transform: rotate(-165deg) translate(28px, -17px); }
+    100%  { transform: rotate(-165deg) translate(35px, -22px); }
+}
+
+@keyframes ship {
+    0% {
+        right: -10%;
+        top: -10%;
+        margin-top: -55px;
+        margin-right: -55px;
+    }
+    40% {
+        right: 50%;
+        top: 50%;
+    }
+    79.5% {    
+        margin-top: -55px;
+        margin-right: -55px;
+    }
+    84% {
+        margin-top: -20px;
+        margin-right: 0px;
+    }
+    100% {
+        right: 50%;
+        top: 50%;
+        margin-top: 0px;
+        margin-right: 0px;
+    }
+}
+
+@keyframes ship-rotate {
+    0%   { transform: rotate(-110deg); }
+    20%  { transform: rotate(-110deg); }
+    34%  { transform: rotate(47deg); }  
+    79%  { transform: rotate(47deg); } 
+    100% { transform: rotate(47deg); }
+}
+
+@keyframes ship-shadow {
+    0% {
+        right: -10%;
+        transform: scale(1.4, 1);
+        opacity: .3;
+    }
+    40% {
+        right: 50%;
+        transform: scale(.75, 1);
+        opacity: 1;
+    }
+    100% {
+        right: 50%;
+    }
+}
+
+@keyframes flag-pole {
+    0%   { top: -57px; }
+    48%  { top: -57px; }
+    54%  { top: -77px; }
+    90%  { top: -77px; }
+    92%  { top: -57px; }
+    100% { top: -57px; }
+}
+
+@keyframes flag-unfurl {
+    0%   { width: 0; }
+    55%  { width: 0; }
+    60%  { width: 14px; }
+    90%  { width: 14px; }
+    100% { width: 14px; }
+}
+
+/* 媒體查詢 - 平板 */
+@media (max-width: 768px) {
+    .container {
+        padding: 15px;
+        max-width: 90%;
+    }
+    .contact-form {
+        padding: 25px;
+        max-width: 400px;
+    }
+    .popup {
+        max-width: 280px;
+    }
+    .space-animation {
+        width: clamp(100px, 20vw, 150px); /* 平板上縮小動畫 */
+        height: clamp(100px, 20vw, 150px);
+        bottom: 15px;
+        left: 15px;
+    }
+    .space .mars {
+        transform: translate(-50%, -50%) scale(0.8); /* 進一步縮放星球 */
+    }
+}
+
+/* 媒體查詢 - 手機 */
+@media (max-width: 480px) {
+    h1 {
+        font-size: clamp(18px, 4vw, 24px);
+    }
+    p {
+        font-size: clamp(12px, 2.5vw, 14px);
+    }
+    .contact-form {
+        width: 90%;
+        padding: 20px;
+        max-width: 350px;
+    }
+    .space-animation {
+        width: clamp(80px, 20vw, 120px); /* 手機上進一步縮小 */
+        height: clamp(80px, 20vw, 120px);
+        bottom: 10px;
+        left: 10px;
+    }
+    .space .mars {
+        transform: translate(-50%, -50%) scale(0.7); /* 手機上縮小星球 */
+    }
+    .visitor-counter {
+        bottom: 5px; /* 避免與動畫重疊 */
+    }
+}

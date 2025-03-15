@@ -1,0 +1,26 @@
+{
+    "name": "jerry-personal-page",
+    "version": "1.0.0",
+    "description": "Jerry的個人主頁後端服務器",
+    "main": "app.js",
+    "scripts": {
+        "start": "node app.js",
+        "dev": "nodemon app.js",
+        "prod": "pm2 start app.js --name jerry-page"
+    },
+    "engines": {
+        "node": ">=18.0.0"
+    },
+    "dependencies": {
+        "cors": "^2.8.5",
+        "dotenv": "^16.4.5",
+        "express": "^4.19.2",
+        "node-telegram-bot-api": "^0.66.0",
+        "pm2": "^5.4.2"
+    },
+    "devDependencies": {
+        "nodemon": "^3.1.7"
+    },
+    "author": "Jerry",
+    "license": "MIT"
+}

@@ -1,0 +1,84 @@
+<!DOCTYPE html>
+<html lang="zh-Hant">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <meta name="description" content="Jerry的個人主頁 - 一個無聊的大學生的小天地">
+    <meta name="keywords" content="Jerry, 大學">
+    <title>Jerry的個人主頁</title>
+    <link rel="stylesheet" href="./styles.css">
+    <script async src="https://pagead2.googlesyndication.com/pagead/js/adsbygoogle.js?client=ca-pub-5349107613980359"
+     crossorigin="anonymous"></script>
+    <!-- Google tag (gtag.js) -->
+    <script async src="https://www.googletagmanager.com/gtag/js?id=G-JG5MDTX18P"></script>
+    <script>
+    window.dataLayer = window.dataLayer || [];
+    function gtag(){dataLayer.push(arguments);}
+    gtag('js', new Date());
+    gtag('config', 'G-JG5MDTX18P');
+    </script>
+    <link rel="icon" type="image/x-icon" href="/favicon.ico">
+</head>
+<body>
+    <div class="container">
+        <h1>歡迎來到 Jerry 的小窩</h1>
+        <p>早安你好</p>
+        <p class="greeting">問候語載入中...</p>
+        <button class="dynamic-button contact-btn">聯絡我</button>
+        <p class="time-display">現在時間：<span id="current-time"></span></p>
+    </div>
+
+    <div class="overlay"></div>
+    <div class="contact-form">
+        <h2>聯絡我</h2>
+        <form id="contact-form">
+            <input type="text" name="name" placeholder="您的姓名" required>
+            <input type="email" name="email" placeholder="您的電子郵件" required>
+            <textarea name="message" placeholder="您的訊息" rows="4" required></textarea>
+            <div class="form-buttons">
+                <button type="submit" class="dynamic-button">發送訊息</button>
+                <button type="button" class="dynamic-button back-btn">返回</button>
+            </div>
+        </form>
+        <div class="form-status"></div>
+    </div>
+
+    <button class="back-to-top">↑</button>
+
+    <div class="popup-overlay"></div>
+    <div class="popup">
+        <p>如果我看到就會回！</p>
+        <button class="dynamic-button close-popup">關閉</button>
+    </div>
+
+    <!-- 太空動畫（左下角） -->
+    <div class="space-animation">
+        <div class="space">
+            <div class="ship">
+                <div class="ship-rotate">
+                    <div class="pod"></div>
+                    <div class="fuselage"></div>
+                </div>
+            </div>
+            <div class="ship-shadow"></div>
+            <div class="mars">
+                <div class="tentacle"></div>
+                <div class="flag">
+                    <div class="small-tentacle"></div>
+                </div>
+                <div class="planet">
+                    <div class="surface"></div>
+                    <div class="crater1"></div>
+                    <div class="crater2"></div>
+                    <div class="crater3"></div>
+                </div>
+            </div>
+        </div>
+    </div>
+
+    <!-- 訪客數（移至中間最下方） -->
+    <p class="visitor-counter">訪客數：<span id="visitor-count">載入中...</span></p>
+
+    <script src="./scripts.js"></script>
+</body>
+</html>
