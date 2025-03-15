@@ -55,7 +55,12 @@ const updateVisitorCount = async () => {
 
 const updateTime = () => {
     document.getElementById('current-time').textContent = new Date().toLocaleString('zh-TW', {
-        hour12: false, year: 'numeric', month: '2-digit', day: '2-digit', hour: '2-digit', minute: '2-digit', second: '2-digit', timeZoneName: 'short'
+        hour12: false,
+        year: 'numeric',
+        month: '2-digit',
+        day: '2-digit',
+        hour: '2-digit',
+        minute: '2-digit',
     });
 };
 
@@ -94,22 +99,21 @@ const updateGreeting = () => {
 };
 
 document.addEventListener('DOMContentLoaded', () => {
-    document.querySelector('.contact-btn')?.addEventListener('click', toggleContactForm);
-    document.querySelectorAll('.dynamic-button').forEach(btn => btn.addEventListener('click', createRipple));
-    document.getElementById('contact-form')?.addEventListener('submit', submitForm);
-    document.querySelector('.back-btn')?.addEventListener('click', toggleContactForm);
-    document.querySelector('.close-popup')?.addEventListener('click', togglePopup);
-    backToTop?.addEventListener('click', scrollToTop);
     document.querySelectorAll('.contact-btn').forEach(btn => {
-        btn.addEventListener('click', createRipple); // 保留波紋效果
+        btn.addEventListener('click', createRipple);
         if (btn.textContent === '聯絡我') {
             btn.addEventListener('click', toggleContactForm);
         } else if (btn.textContent === 'Github') {
             btn.addEventListener('click', () => {
-                window.open('https://github.com/jerrylin1102', '_blank'); // 新頁面開啟連結
+                window.open('https://github.com/jerrylin1102', '_blank');
             });
         }
     });
+
+    document.getElementById('contact-form')?.addEventListener('submit', submitForm);
+    document.querySelector('.back-btn')?.addEventListener('click', toggleContactForm);
+    document.querySelector('.close-popup')?.addEventListener('click', togglePopup);
+    backToTop?.addEventListener('click', scrollToTop);
 
     updateTime();
     setInterval(updateTime, 1000);
