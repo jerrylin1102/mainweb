@@ -23,15 +23,15 @@ body {
 }
 
 :root {
-    --background: linear-gradient(320deg, #4144fc, #7beafe, #db49ff, #225dff);
+    --background: linear-gradient(320deg, #9193f7, #9ce5f1, #e289f8, #97aff0);
     --text-color: white;
-    --button-bg: linear-gradient(45deg, #ff416c, #ff4b2b, #1e90ff, #00ced1, #ff416c);
+    --button-bg: linear-gradient(45deg,  #4144fc, #7beafe, #db49ff, #225dff);
 }
 
 body.dark-mode {
     --background: linear-gradient(320deg, #1a1a2e, #16213e, #0f3460, #533483);
     --text-color: #e0e0e0;
-    --button-bg: linear-gradient(45deg, #4a00e0, #8e2de2, #4a00e0);
+    --button-bg: linear-gradient(45deg, #503dff, #b15afd, #503dff);
 }
 
 @keyframes gradientBG {
