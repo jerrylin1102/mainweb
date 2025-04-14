@@ -1,3 +1,4 @@
+/* styles.css */
 * {
     margin: 0;
     padding: 0;
@@ -73,6 +74,36 @@ p {
 @keyframes fadeInUp {
     from { opacity: 0; transform: translateY(20px); }
     to { opacity: 1; transform: translateY(0); }
+}
+
+/* 新的按鈕樣式 */
+.btndynamic-button {
+    font-size: 1.2rem;
+    padding: 1rem 2.5rem;
+    border: none;
+    outline: none;
+    border-radius: 0.4rem;
+    cursor: pointer;
+    text-transform: uppercase;
+    background-color: rgb(26, 14, 24);
+    color: rgb(234, 234, 234);
+    font-weight: 700;
+    transition: 0.6s;
+    box-shadow: 0px 0px 60px #8cd7ff;
+    margin: 10px 0;
+    width: auto;
+    min-width: 200px;
+    text-align: center;
+}
+
+.btn:active {
+    scale: 0.92;
+}
+
+.dynamic-button:hover {
+    background: rgb(2,29,78);
+    background: linear-gradient(270deg, rgba(2, 29, 78, 0) 0%, rgba(43, 97, 243, 0.575) 60%);
+    color: rgb(31, 4, 38);
 }
 
 .dynamic-button {
@@ -329,6 +360,125 @@ p {
     font-size: clamp(12px, 2vw, 14px);
     z-index: 10;
 }
+.theme-contact-btn {
+    font-size: 1.2rem;
+    padding: 1rem 2.5rem;
+    border: none;
+    outline: none;
+    border-radius: 0.4rem;
+    cursor: pointer;
+    text-transform: uppercase;
+    background-color: rgb(26, 14, 24);
+    color: rgb(234, 234, 234);
+    font-weight: 700;
+    transition: 0.6s;
+    box-shadow: 0px 0px 60px #8cd7ff;
+    margin: 10px 0;
+    width: auto;
+    min-width: 200px;
+    text-align: center;
+}
+
+/* 履歷模態視窗樣式 */
+.resume-modal {
+    position: fixed;
+    top: 0;
+    left: 0;
+    width: 100%;
+    height: 100%;
+    background: rgba(0, 0, 0, 0.562);
+    display: flex;
+    justify-content: center;
+    align-items: center;
+    z-index: 30;
+    opacity: 0;
+    visibility: hidden;
+    transition: all 0.3s ease;
+}
+
+.resume-modal.active {
+    opacity: 1;
+    visibility: visible;
+}
+
+.resume-content {
+    background: white;
+    padding: 20px;
+    border-radius: 10px;
+    position: relative;
+    max-width: 90%;
+    max-height: 90%;
+    display: flex;
+    flex-direction: column;
+    align-items: center;
+}
+
+.resume-image-container {
+    width: 100%;
+    display: flex;
+    justify-content: center;
+    align-items: center;
+    overflow: hidden;
+}
+
+#resume-image {
+    width: auto;
+    height: auto;
+    max-width: 100%;
+    max-height: 70vh;
+    object-fit: contain;
+}
+
+.resume-controls {
+    display: flex;
+    justify-content: space-between;
+    align-items: center;
+    width: 100%;
+    margin-top: 15px;
+    padding: 0 10px;
+}
+
+.resume-nav {
+    background: #333;
+    color: white;
+    border: none;
+    padding: 8px 15px;
+    border-radius: 5px;
+    cursor: pointer;
+    font-weight: bold;
+    transition: background 0.3s ease;
+}
+
+.resume-nav:hover {
+    background: #555;
+}
+
+.resume-page-indicator {
+    font-size: 16px;
+    color: #333;
+}
+
+.resume-close {
+    position: absolute;
+    top: 10px;
+    right: 10px;
+    background: #ff4d4d;
+    color: white;
+    border: none;
+    width: 35px;
+    height: 35px;
+    border-radius: 50%;
+    display: flex;
+    justify-content: center;
+    align-items: center;
+    cursor: pointer;
+    font-weight: bold;
+    font-size: 16px;
+}
+
+.resume-close:hover {
+    background: #ff3333;
+}
 
 @media (max-width: 480px) {
     h1 {
@@ -347,6 +497,11 @@ p {
         padding: 4px 10px;
         margin-top: 8px;
     }
+    .btn {
+        font-size: 1rem;
+        padding: 0.8rem 1.5rem;
+        min-width: 150px;
+    }
     .dynamic-button {
         width: clamp(100px, 40vw, 150px);
         padding: 8px 16px;
@@ -361,5 +516,16 @@ p {
         width: clamp(100px, 20vw, 120px);
         padding: 6px 12px;
         font-size: clamp(10px, 2vw, 12px);
+    }
+    .resume-content {
+        padding: 10px;
+    }
+    .resume-controls {
+        flex-direction: column;
+        gap: 10px;
+    }
+    .resume-nav {
+        padding: 6px 12px;
+        font-size: 14px;
     }
 }

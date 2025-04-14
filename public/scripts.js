@@ -17,6 +17,46 @@ const togglePopup = () => {
     }
 };
 
+// 新增：履歷模態視窗控制
+let currentResumePage = 1;
+const totalResumePages = 4;
+
+const toggleResumeModal = () => {
+    const modal = document.querySelector('.resume-modal');
+    if (modal) {
+        modal.classList.toggle('active');
+        // 切換時重置為第一頁
+        if (modal.classList.contains('active')) {
+            updateResumePage(1);
+        }
+    }
+};
+
+const updateResumePage = (pageNum) => {
+    currentResumePage = pageNum;
+    const img = document.getElementById('resume-image');
+    const pageIndicator = document.getElementById('current-page');
+    
+    if (img && pageIndicator) {
+        img.src = `resume${currentResumePage}.jpg`;
+        img.alt = `履歷第${currentResumePage}頁`;
+        pageIndicator.textContent = currentResumePage;
+    }
+};
+
+const navigateResume = (direction) => {
+    let newPage = currentResumePage;
+    
+    if (direction === 'next') {
+        newPage = (currentResumePage % totalResumePages) + 1;
+    } else if (direction === 'prev') {
+        newPage = currentResumePage - 1;
+        if (newPage < 1) newPage = totalResumePages;
+    }
+    
+    updateResumePage(newPage);
+};
+
 const submitForm = async e => {
     e.preventDefault();
     const form = document.getElementById('contact-form');
@@ -105,8 +145,8 @@ const toggleTheme = () => {
 };
 
 document.addEventListener('DOMContentLoaded', () => {
+    // 原來的按鈕初始化
     document.querySelectorAll('.contact-btn').forEach(btn => {
-        btn.addEventListener('click', createRipple);
         if (btn.textContent === '聯絡我') {
             btn.addEventListener('click', toggleContactForm);
         } else if (btn.textContent === 'Github') {
@@ -115,6 +155,21 @@ document.addEventListener('DOMContentLoaded', () => {
             });
         }
     });
+
+    // 新增履歷按鈕監聽
+    const resumeBtn = document.querySelector('.resume-btn');
+    if (resumeBtn) {
+        resumeBtn.addEventListener('click', toggleResumeModal);
+    }
+
+    // 履歷導航按鈕
+    const prevBtn = document.querySelector('.prev-btn');
+    const nextBtn = document.querySelector('.next-btn');
+    const closeResumeBtn = document.querySelector('.resume-close');
+
+    if (prevBtn) prevBtn.addEventListener('click', () => navigateResume('prev'));
+    if (nextBtn) nextBtn.addEventListener('click', () => navigateResume('next'));
+    if (closeResumeBtn) closeResumeBtn.addEventListener('click', toggleResumeModal);
 
     document.getElementById('contact-form')?.addEventListener('submit', submitForm);
     document.querySelector('.back-btn')?.addEventListener('click', toggleContactForm);

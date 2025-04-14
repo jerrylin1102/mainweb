@@ -1,3 +1,4 @@
+<!-- index.html -->
 <!DOCTYPE html>
 <html lang="zh-Hant">
 <head>
@@ -28,6 +29,7 @@
         <p class="greeting">問候語載入中...</p>
         <button class="dynamic-button contact-btn">聯絡我</button>
         <button class="dynamic-button contact-btn">Github</button>
+        <button class="dynamic-button resume-btn">履歷</button>
         <p class="time-display">現在時間：<span id="current-time"></span></p>
         <p class="visitor-counter">訪客數：<span id="visitor-count">載入中...</span></p>
     </div>
@@ -45,6 +47,21 @@
             </div>
         </form>
         <div class="form-status"></div>
+    </div>
+
+    <!-- 履歷視窗 -->
+    <div class="resume-modal">
+        <div class="resume-content">
+            <div class="resume-image-container">
+                <img id="resume-image" src="resume1.jpg" alt="履歷第1頁">
+            </div>
+            <div class="resume-controls">
+                <button class="resume-nav prev-btn">&#10094; 上一頁</button>
+                <span class="resume-page-indicator">第 <span id="current-page">1</span> 頁，共 4 頁</span>
+                <button class="resume-nav next-btn">下一頁 &#10095;</button>
+            </div>
+            <button class="resume-close">關閉</button>
+        </div>
     </div>
 
     <button class="back-to-top">↑</button>
