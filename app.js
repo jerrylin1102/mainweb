@@ -188,7 +188,7 @@ const checkPermission = (permission) => {
 
 app.post('/api/menu', checkPermission('edit'), (req, res) => {
     try {
-        const { title, url } = req.body;
+        const { title, url, description } = req.body;
         if (!title || !url) {
             return res.status(400).json({ error: '標題和URL都是必須的' });
         }
@@ -197,7 +197,8 @@ app.post('/api/menu', checkPermission('edit'), (req, res) => {
         const newItem = {
             id: Date.now().toString(),
             title,
-            url
+            url,
+            description: description || ''
         };
         menuData.menuItems.push(newItem);
         fs.writeFileSync(menuDataPath, JSON.stringify(menuData, null, 4));
@@ -211,7 +212,7 @@ app.post('/api/menu', checkPermission('edit'), (req, res) => {
 app.put('/api/menu/:id', checkPermission('edit'), (req, res) => {
     try {
         const { id } = req.params;
-        const { title, url } = req.body;
+        const { title, url, description } = req.body;
         if (!title || !url) {
             return res.status(400).json({ error: '標題和URL都是必須的' });
         }
@@ -226,7 +227,8 @@ app.put('/api/menu/:id', checkPermission('edit'), (req, res) => {
         menuData.menuItems[itemIndex] = {
             ...menuData.menuItems[itemIndex],
             title,
-            url
+            url,
+            description: description || menuData.menuItems[itemIndex].description || ''
         };
 
         fs.writeFileSync(menuDataPath, JSON.stringify(menuData, null, 4));

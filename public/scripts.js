@@ -156,7 +156,12 @@ document.addEventListener('DOMContentLoaded', () => {
             const response = await fetch('/api/menu');
             const data = await response.json();
             menuItems.innerHTML = data.menuItems
-                .map(item => `<a href="${item.url}" target="_blank">${item.title}</a>`)
+                .map(item => `
+                    <div class="menu-item">
+                        <a href="${item.url}" target="_blank">${item.title}</a>
+                        ${item.description ? `<div class="menu-description">${item.description}</div>` : ''}
+                    </div>
+                `)
                 .join('');
         } catch (error) {
             console.error('載入選單項目失敗：', error);

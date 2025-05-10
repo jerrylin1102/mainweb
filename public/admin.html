@@ -76,6 +76,9 @@
                     <div class="form-group">
                         <input type="text" id="menuUrl" placeholder="連結網址" required>
                     </div>
+                    <div class="form-group">
+                        <textarea id="menuDescription" placeholder="說明文字" rows="3" style="width: 100%;"></textarea>
+                    </div>
                     <button onclick="addMenuItem()">新增選單項目</button>
                     <div id="menuError" class="error hidden"></div>
                     <div id="menuSuccess" class="success hidden"></div>
@@ -85,6 +88,7 @@
                             <tr>
                                 <th>名稱</th>
                                 <th>連結</th>
+                                <th>說明</th>
                                 <th>操作</th>
                             </tr>
                         </thead>
@@ -293,9 +297,10 @@
                     row.innerHTML = `
                         <td>${item.title}</td>
                         <td>${item.url}</td>
+                        <td>${item.description || ''}</td>
                         <td class="menu-actions">
                             ${userPermission === 'edit' ? `
-                                <button onclick="editMenuItem('${item.id}', '${item.title}', '${item.url}')" style="background: #28a745;">編輯</button>
+                                <button onclick="editMenuItem('${item.id}', '${item.title}', '${item.url}', '${item.description || ''}')" style="background: #28a745;">編輯</button>
                                 <button onclick="deleteMenuItem('${item.id}')" style="background: #dc3545;">刪除</button>
                             ` : ''}
                         </td>
@@ -316,6 +321,7 @@
 
             const title = document.getElementById('menuTitle').value;
             const url = document.getElementById('menuUrl').value;
+            const description = document.getElementById('menuDescription').value;
             
             try {
                 const username = document.getElementById('username').value;
@@ -324,12 +330,13 @@
                     headers: {
                         'Content-Type': 'application/json',
                     },
-                    body: JSON.stringify({ title, url, username })
+                    body: JSON.stringify({ title, url, description, username })
                 });
                 
                 if (response.ok) {
                     document.getElementById('menuTitle').value = '';
                     document.getElementById('menuUrl').value = '';
+                    document.getElementById('menuDescription').value = '';
                     document.getElementById('menuSuccess').textContent = '新增成功！';
                     loadMenuItems();
                     setTimeout(() => {
@@ -345,7 +352,7 @@
         }
 
         // 編輯選單項目
-        async function editMenuItem(id, oldTitle, oldUrl) {
+        async function editMenuItem(id, oldTitle, oldUrl, oldDescription) {
             // 檢查權限
             const permission = localStorage.getItem('userPermission');
             if (permission === 'view') {
@@ -377,6 +384,13 @@
                         </label>
                         <input type="text" id="newUrl" value="${oldUrl}">
                     </div>
+                    <div class="form-group">
+                        <label>
+                            <input type="checkbox" id="editDescription" checked>
+                            修改說明
+                        </label>
+                        <textarea id="newDescription" rows="3" style="width: 100%;">${oldDescription}</textarea>
+                    </div>
                     <div class="dialog-buttons">
                         <button onclick="submitEdit('${id}')" style="background: #28a745;">確定</button>
                         <button onclick="closeEditDialog()" style="background: #6c757d;">取消</button>
@@ -406,10 +420,12 @@
 
             const editTitle = document.getElementById('editTitle').checked;
             const editUrl = document.getElementById('editUrl').checked;
+            const editDescription = document.getElementById('editDescription').checked;
             const newTitle = document.getElementById('newTitle').value;
             const newUrl = document.getElementById('newUrl').value;
+            const newDescription = document.getElementById('newDescription').value;
 
-            if (!editTitle && !editUrl) {
+            if (!editTitle && !editUrl && !editDescription) {
                 alert('請至少選擇一個要修改的項目');
                 return;
             }
@@ -417,6 +433,7 @@
             const updateData = {};
             if (editTitle) updateData.title = newTitle;
             if (editUrl) updateData.url = newUrl;
+            if (editDescription) updateData.description = newDescription;
 
             try {
                 const username = document.getElementById('username').value;
@@ -431,6 +448,7 @@
                 if (response.ok) {
                     document.getElementById('menuSuccess').textContent = '更新成功！';
                     loadMenuItems();
+                    closeEditDialog();
                     setTimeout(() => {
                         document.getElementById('menuSuccess').textContent = '';
                     }, 3000);
