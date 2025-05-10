@@ -20,7 +20,7 @@
             <div>
                 <button onclick="login()">登入</button>
             </div>
-            <div id="loginError" class="error"></div>
+            <div id="loginError" class="error hidden"></div>
         </div>
 
         <!-- 管理面板 -->
@@ -160,6 +160,19 @@
                 document.getElementById('passwordError').classList.remove('hidden');
             }
         }
+
+        // 監聽Enter鍵
+        document.getElementById('username').addEventListener('keypress', function(e) {
+            if (e.key === 'Enter') {
+                login();
+            }
+        });
+
+        document.getElementById('password').addEventListener('keypress', function(e) {
+            if (e.key === 'Enter') {
+                login();
+            }
+        });
 
         // 登入功能
         async function login() {
