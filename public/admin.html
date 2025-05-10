@@ -9,19 +9,27 @@
 <body>
     <div class="container">
         <!-- 登入表單 -->
-        <div id="loginForm" class="login-form">
-            <h2>管理員登入</h2>
-            <div>
-                <input type="text" id="username" placeholder="帳號" required>
+        <form id="loginForm" class="form">
+            <div class="title-2"><span>LOGIN</span></div>
+            <div class="input-container">
+                <input type="text" id="username" placeholder="Account" class="input-mail" required />
             </div>
-            <div>
-                <input type="password" id="password" placeholder="密碼" required>
+
+            <section class="bg-stars">
+                <span class="star"></span>
+                <span class="star"></span>
+                <span class="star"></span>
+                <span class="star"></span>
+            </section>
+
+            <div class="input-container">
+                <input type="password" id="password" placeholder="Password" class="input-pwd" required />
             </div>
-            <div>
-                <button onclick="login()">登入</button>
-            </div>
+            <button class="submit" type="button" onclick="login()">
+                <span class="sign-text">Login</span>
+            </button>
             <div id="loginError" class="error hidden"></div>
-        </div>
+        </form>
 
         <!-- 管理面板 -->
         <div id="adminPanel" class="admin-panel hidden">
