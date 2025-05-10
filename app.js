@@ -212,11 +212,7 @@ app.post('/api/menu', checkPermission('edit'), (req, res) => {
 app.put('/api/menu/:id', checkPermission('edit'), (req, res) => {
     try {
         const { id } = req.params;
-        const { title, url, description } = req.body;
-        if (!title || !url) {
-            return res.status(400).json({ error: '標題和URL都是必須的' });
-        }
-
+        const updates = req.body;
         const menuData = JSON.parse(fs.readFileSync(menuDataPath, 'utf8'));
         const itemIndex = menuData.menuItems.findIndex(item => item.id === id);
         
@@ -224,12 +220,10 @@ app.put('/api/menu/:id', checkPermission('edit'), (req, res) => {
             return res.status(404).json({ error: '找不到該選單項目' });
         }
 
-        menuData.menuItems[itemIndex] = {
-            ...menuData.menuItems[itemIndex],
-            title,
-            url,
-            description: description || menuData.menuItems[itemIndex].description || ''
-        };
+        // 只更新有提供的欄位
+        if (updates.title !== undefined) menuData.menuItems[itemIndex].title = updates.title;
+        if (updates.url !== undefined) menuData.menuItems[itemIndex].url = updates.url;
+        if (updates.description !== undefined) menuData.menuItems[itemIndex].description = updates.description;
 
         fs.writeFileSync(menuDataPath, JSON.stringify(menuData, null, 4));
         res.json(menuData.menuItems[itemIndex]);

@@ -294,13 +294,17 @@
                 const userPermission = localStorage.getItem('userPermission');
                 data.menuItems.forEach(item => {
                     const row = document.createElement('tr');
+                    const escapedTitle = item.title.replace(/['\\]/g, '\\$&');
+                    const escapedUrl = item.url.replace(/['\\]/g, '\\$&');
+                    const escapedDescription = (item.description || '').replace(/['\\]/g, '\\$&');
+                    
                     row.innerHTML = `
                         <td>${item.title}</td>
                         <td>${item.url}</td>
                         <td>${item.description || ''}</td>
                         <td class="menu-actions">
                             ${userPermission === 'edit' ? `
-                                <button onclick="editMenuItem('${item.id}', '${item.title}', '${item.url}', '${item.description || ''}')" style="background: #28a745;">編輯</button>
+                                <button onclick="editMenuItem('${item.id}', '${escapedTitle}', '${escapedUrl}', '${escapedDescription}')" style="background: #28a745;">編輯</button>
                                 <button onclick="deleteMenuItem('${item.id}')" style="background: #dc3545;">刪除</button>
                             ` : ''}
                         </td>
@@ -367,6 +371,16 @@
 
             const editDialog = document.createElement('div');
             editDialog.className = 'edit-dialog';
+            // 將特殊字符轉義
+            const escapeHtml = (unsafe) => {
+                return unsafe
+                    .replace(/&/g, "&amp;")
+                    .replace(/</g, "&lt;")
+                    .replace(/>/g, "&gt;")
+                    .replace(/"/g, "&quot;")
+                    .replace(/'/g, "&#039;");
+            };
+
             editDialog.innerHTML = `
                 <div class="edit-dialog-content">
                     <h3>編輯選單項目</h3>
@@ -375,21 +389,21 @@
                             <input type="checkbox" id="editTitle" checked>
                             修改名稱
                         </label>
-                        <input type="text" id="newTitle" value="${oldTitle}">
+                        <input type="text" id="newTitle" value="${escapeHtml(oldTitle)}">
                     </div>
                     <div class="form-group">
                         <label>
                             <input type="checkbox" id="editUrl" checked>
                             修改連結
                         </label>
-                        <input type="text" id="newUrl" value="${oldUrl}">
+                        <input type="text" id="newUrl" value="${escapeHtml(oldUrl)}">
                     </div>
                     <div class="form-group">
                         <label>
                             <input type="checkbox" id="editDescription" checked>
                             修改說明
                         </label>
-                        <textarea id="newDescription" rows="3" style="width: 100%;">${oldDescription}</textarea>
+                        <textarea id="newDescription" rows="3" style="width: 100%;">${escapeHtml(oldDescription)}</textarea>
                     </div>
                     <div class="dialog-buttons">
                         <button onclick="submitEdit('${id}')" style="background: #28a745;">確定</button>
@@ -412,43 +426,67 @@
 
         // 提交編輯
         async function submitEdit(id) {
-            const permission = localStorage.getItem('userPermission');
-            if (permission === 'view') {
-                closeEditDialog();
-                return;
-            }
-
-            const editTitle = document.getElementById('editTitle').checked;
-            const editUrl = document.getElementById('editUrl').checked;
-            const editDescription = document.getElementById('editDescription').checked;
-            const newTitle = document.getElementById('newTitle').value;
-            const newUrl = document.getElementById('newUrl').value;
-            const newDescription = document.getElementById('newDescription').value;
-
-            if (!editTitle && !editUrl && !editDescription) {
-                alert('請至少選擇一個要修改的項目');
-                return;
-            }
-
-            const updateData = {};
-            if (editTitle) updateData.title = newTitle;
-            if (editUrl) updateData.url = newUrl;
-            if (editDescription) updateData.description = newDescription;
-
             try {
-                const username = document.getElementById('username').value;
+                const permission = localStorage.getItem('userPermission');
+                if (permission === 'view') {
+                    closeEditDialog();
+                    return;
+                }
+
+                const editTitle = document.getElementById('editTitle').checked;
+                const editUrl = document.getElementById('editUrl').checked;
+                const editDescription = document.getElementById('editDescription').checked;
+                const newTitle = document.getElementById('newTitle').value;
+                const newUrl = document.getElementById('newUrl').value;
+                const newDescription = document.getElementById('newDescription').value;
+
+                if (!editTitle && !editUrl && !editDescription) {
+                    alert('請至少選擇一個要修改的項目');
+                    return;
+                }
+
+                let updateData = {
+                    username: document.getElementById('username').value
+                };
+
+                // 如果欄位被勾選，就將其值包含在更新資料中
+                if (editTitle) {
+                    if (newTitle.trim() === '') {
+                        alert('標題不能為空');
+                        return;
+                    }
+                    updateData.title = newTitle;
+                }
+                
+                if (editUrl) {
+                    if (newUrl.trim() === '') {
+                        alert('連結不能為空');
+                        return;
+                    }
+                    updateData.url = newUrl;
+                }
+                
+                if (editDescription) {
+                    updateData.description = newDescription;  // 說明可以是空的
+                }
+
+                // 檢查是否有選擇要修改的欄位
+                if (Object.keys(updateData).length === 1) {  // 只有 username
+                    alert('請至少選擇一個要修改的項目');
+                    return;
+                }
+
                 const response = await fetch(`/api/menu/${id}`, {
                     method: 'PUT',
                     headers: {
                         'Content-Type': 'application/json',
                     },
-                    body: JSON.stringify({ ...updateData, username })
+                    body: JSON.stringify(updateData)
                 });
                 
                 if (response.ok) {
                     document.getElementById('menuSuccess').textContent = '更新成功！';
                     loadMenuItems();
-                    closeEditDialog();
                     setTimeout(() => {
                         document.getElementById('menuSuccess').textContent = '';
                     }, 3000);
@@ -458,6 +496,8 @@
                 }
             } catch (error) {
                 document.getElementById('menuError').textContent = '更新失敗：' + error.message;
+            } finally {
+                closeEditDialog();
             }
         }
 
