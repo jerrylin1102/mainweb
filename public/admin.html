@@ -28,12 +28,45 @@
             <!-- 側邊欄 -->
             <div class="sidebar">
                 <div class="nav-item active" onclick="switchPanel('menuPanel')">選單管理</div>
+                <div id="userManageNav" class="nav-item" onclick="switchPanel('userPanel')">使用者管理</div>
                 <div class="nav-item" onclick="switchPanel('passwordPanel')">修改密碼</div>
                 <div class="nav-item" onclick="logout()" style="margin-top: auto;">登出系統</div>
             </div>
 
             <!-- 內容區域 -->
             <div class="content">
+                <!-- 使用者管理面板 -->
+                <div id="userPanel" class="panel">
+                    <h2>使用者管理</h2>
+                    <div class="form-group">
+                        <input type="text" id="newUsername" placeholder="使用者名稱" required>
+                    </div>
+                    <div class="form-group">
+                        <input type="password" id="newUserPassword" placeholder="密碼" required>
+                    </div>
+                    <div class="form-group">
+                        <select id="newUserPermission" required>
+                            <option value="">選擇權限</option>
+                            <option value="view">查看權限</option>
+                            <option value="edit">編輯權限</option>
+                        </select>
+                    </div>
+                    <button onclick="addUser()">新增使用者</button>
+                    <div id="userError" class="error hidden"></div>
+                    <div id="userSuccess" class="success hidden"></div>
+                    <div class="table-responsive">
+                        <table>
+                            <thead>
+                                <tr>
+                                    <th>使用者名稱</th>
+                                    <th>權限</th>
+                                    <th>操作</th>
+                                </tr>
+                            </thead>
+                            <tbody id="userList"></tbody>
+                        </table>
+                    </div>
+                </div>
                 <!-- 選單管理面板 -->
                 <div id="menuPanel" class="panel active">
                     <h2>選單管理</h2>
@@ -191,8 +224,21 @@
                 const data = await response.json();
                 
                 if (data.success) {
+                    // 先重置所有狀態
+                    document.getElementById('menuTitle').disabled = false;
+                    document.getElementById('menuUrl').disabled = false;
+                    const menuPanel = document.getElementById('menuPanel');
+                    const editButtons = menuPanel.querySelectorAll('button[onclick^="edit"], button[onclick^="delete"], button[onclick="addMenuItem()"]');
+                    editButtons.forEach(button => button.style.display = 'block');
+
+                    // 設置新的登入資訊
                     localStorage.setItem('adminLoggedIn', 'true');
+                    localStorage.setItem('userPermission', data.permission);
+                    localStorage.setItem('isAdmin', data.isAdmin);
+                    localStorage.setItem('username', username);
+                    
                     checkLoginStatus();
+                    checkPermission(); // 立即檢查並套用權限
                 } else {
                     document.getElementById('loginError').textContent = '登入失敗：' + (data.error || '帳號或密碼錯誤');
                 }
@@ -203,7 +249,33 @@
 
         // 登出功能
         function logout() {
+            // 關閉所有打開的編輯對話框
+            const editDialog = document.querySelector('.edit-dialog');
+            if (editDialog) {
+                editDialog.remove();
+            }
+
+            // 清除所有登入相關的資訊
             localStorage.removeItem('adminLoggedIn');
+            localStorage.removeItem('userPermission');
+            localStorage.removeItem('isAdmin');
+            localStorage.removeItem('username');
+
+            // 清除所有輸入框的值
+            document.getElementById('menuTitle').value = '';
+            document.getElementById('menuUrl').value = '';
+
+            // 重置所有輸入框和按鈕狀態
+            document.getElementById('menuTitle').disabled = false;
+            document.getElementById('menuUrl').disabled = false;
+            const menuPanel = document.getElementById('menuPanel');
+            const editButtons = menuPanel.querySelectorAll('button[onclick^="edit"], button[onclick^="delete"], button[onclick="addMenuItem()"]');
+            editButtons.forEach(button => button.style.display = 'block');
+
+            // 清空選單項目列表
+            const menuItems = document.getElementById('menuItems');
+            menuItems.innerHTML = '';
+
             checkLoginStatus();
         }
 
@@ -215,14 +287,17 @@
                 const menuItems = document.getElementById('menuItems');
                 menuItems.innerHTML = '';
                 
+                const userPermission = localStorage.getItem('userPermission');
                 data.menuItems.forEach(item => {
                     const row = document.createElement('tr');
                     row.innerHTML = `
                         <td>${item.title}</td>
                         <td>${item.url}</td>
-                        <td>
-                            <button onclick="editMenuItem('${item.id}', '${item.title}', '${item.url}')" style="background: #28a745;">編輯</button>
-                            <button onclick="deleteMenuItem('${item.id}')" style="background: #dc3545;">刪除</button>
+                        <td class="menu-actions">
+                            ${userPermission === 'edit' ? `
+                                <button onclick="editMenuItem('${item.id}', '${item.title}', '${item.url}')" style="background: #28a745;">編輯</button>
+                                <button onclick="deleteMenuItem('${item.id}')" style="background: #dc3545;">刪除</button>
+                            ` : ''}
                         </td>
                     `;
                     menuItems.appendChild(row);
@@ -234,16 +309,22 @@
 
         // 新增選單項目
         async function addMenuItem() {
+            const permission = localStorage.getItem('userPermission');
+            if (permission === 'view') {
+                return;
+            }
+
             const title = document.getElementById('menuTitle').value;
             const url = document.getElementById('menuUrl').value;
             
             try {
+                const username = document.getElementById('username').value;
                 const response = await fetch('/api/menu', {
                     method: 'POST',
                     headers: {
                         'Content-Type': 'application/json',
                     },
-                    body: JSON.stringify({ title, url })
+                    body: JSON.stringify({ title, url, username })
                 });
                 
                 if (response.ok) {
@@ -265,19 +346,86 @@
 
         // 編輯選單項目
         async function editMenuItem(id, oldTitle, oldUrl) {
-            const newTitle = prompt('請輸入新的選單項目名稱：', oldTitle);
-            if (!newTitle) return;
-            
-            const newUrl = prompt('請輸入新的連結網址：', oldUrl);
-            if (!newUrl) return;
-            
+            // 檢查權限
+            const permission = localStorage.getItem('userPermission');
+            if (permission === 'view') {
+                return;
+            }
+
+            // 關閉已存在的編輯對話框
+            const existingDialog = document.querySelector('.edit-dialog');
+            if (existingDialog) {
+                existingDialog.remove();
+            }
+
+            const editDialog = document.createElement('div');
+            editDialog.className = 'edit-dialog';
+            editDialog.innerHTML = `
+                <div class="edit-dialog-content">
+                    <h3>編輯選單項目</h3>
+                    <div class="form-group">
+                        <label>
+                            <input type="checkbox" id="editTitle" checked>
+                            修改名稱
+                        </label>
+                        <input type="text" id="newTitle" value="${oldTitle}">
+                    </div>
+                    <div class="form-group">
+                        <label>
+                            <input type="checkbox" id="editUrl" checked>
+                            修改連結
+                        </label>
+                        <input type="text" id="newUrl" value="${oldUrl}">
+                    </div>
+                    <div class="dialog-buttons">
+                        <button onclick="submitEdit('${id}')" style="background: #28a745;">確定</button>
+                        <button onclick="closeEditDialog()" style="background: #6c757d;">取消</button>
+                    </div>
+                </div>
+            `;
+            if (permission === 'edit') {
+                document.body.appendChild(editDialog);
+            }
+        }
+
+        // 關閉編輯對話框
+        function closeEditDialog() {
+            const dialog = document.querySelector('.edit-dialog');
+            if (dialog) {
+                dialog.remove();
+            }
+        }
+
+        // 提交編輯
+        async function submitEdit(id) {
+            const permission = localStorage.getItem('userPermission');
+            if (permission === 'view') {
+                closeEditDialog();
+                return;
+            }
+
+            const editTitle = document.getElementById('editTitle').checked;
+            const editUrl = document.getElementById('editUrl').checked;
+            const newTitle = document.getElementById('newTitle').value;
+            const newUrl = document.getElementById('newUrl').value;
+
+            if (!editTitle && !editUrl) {
+                alert('請至少選擇一個要修改的項目');
+                return;
+            }
+
+            const updateData = {};
+            if (editTitle) updateData.title = newTitle;
+            if (editUrl) updateData.url = newUrl;
+
             try {
+                const username = document.getElementById('username').value;
                 const response = await fetch(`/api/menu/${id}`, {
                     method: 'PUT',
                     headers: {
                         'Content-Type': 'application/json',
                     },
-                    body: JSON.stringify({ title: newTitle, url: newUrl })
+                    body: JSON.stringify({ ...updateData, username })
                 });
                 
                 if (response.ok) {
@@ -297,11 +445,21 @@
 
         // 刪除選單項目
         async function deleteMenuItem(id) {
+            const permission = localStorage.getItem('userPermission');
+            if (permission === 'view') {
+                return;
+            }
+
             if (!confirm('確定要刪除這個選單項目嗎？')) return;
             
             try {
+                const username = document.getElementById('username').value;
                 const response = await fetch(`/api/menu/${id}`, {
-                    method: 'DELETE'
+                    method: 'DELETE',
+                    headers: {
+                        'Content-Type': 'application/json',
+                    },
+                    body: JSON.stringify({ username })
                 });
                 
                 if (response.ok) {
@@ -319,8 +477,158 @@
             }
         }
 
-        // 頁面載入時檢查登入狀態
-        window.onload = checkLoginStatus;
+        // 新增使用者
+        async function addUser() {
+            const username = document.getElementById('newUsername').value;
+            const password = document.getElementById('newUserPassword').value;
+            const permission = document.getElementById('newUserPermission').value;
+            
+            document.getElementById('userError').classList.add('hidden');
+            document.getElementById('userSuccess').classList.add('hidden');
+            
+            if (!username || !password || !permission) {
+                document.getElementById('userError').textContent = '所有欄位都是必填的';
+                document.getElementById('userError').classList.remove('hidden');
+                return;
+            }
+            
+            try {
+                const response = await fetch('/api/admin/users', {
+                    method: 'POST',
+                    headers: {
+                        'Content-Type': 'application/json',
+                    },
+                    body: JSON.stringify({ username, password, permission })
+                });
+                
+                const data = await response.json();
+                if (data.success) {
+                    document.getElementById('newUsername').value = '';
+                    document.getElementById('newUserPassword').value = '';
+                    document.getElementById('newUserPermission').value = '';
+                    document.getElementById('userSuccess').textContent = '使用者創建成功！';
+                    document.getElementById('userSuccess').classList.remove('hidden');
+                    loadUsers();
+                } else {
+                    document.getElementById('userError').textContent = '創建失敗：' + (data.error || '未知錯誤');
+                    document.getElementById('userError').classList.remove('hidden');
+                }
+            } catch (error) {
+                document.getElementById('userError').textContent = '創建失敗：' + error.message;
+                document.getElementById('userError').classList.remove('hidden');
+            }
+        }
+
+        // 載入使用者列表
+        async function loadUsers() {
+            try {
+                const response = await fetch('/api/admin/users');
+                const users = await response.json();
+                const userList = document.getElementById('userList');
+                userList.innerHTML = '';
+                
+                users.forEach(user => {
+                    const row = document.createElement('tr');
+                    row.innerHTML = `
+                        <td>${user.username}</td>
+                        <td>${user.permission === 'edit' ? '編輯權限' : '查看權限'}</td>
+                        <td class="menu-actions">
+                            ${!user.isAdmin ? 
+                                `<button onclick="deleteUser('${user.username}')" style="background: #dc3545;">刪除</button>` : 
+                                '<span>管理員</span>'}
+                        </td>
+                    `;
+                    userList.appendChild(row);
+                });
+            } catch (error) {
+                console.error('載入使用者列表失敗:', error);
+            }
+        }
+
+        // 刪除使用者
+        async function deleteUser(username) {
+            if (!confirm('確定要刪除使用者 ' + username + ' 嗎？')) return;
+            
+            try {
+                const response = await fetch(`/api/admin/users/${username}`, {
+                    method: 'DELETE'
+                });
+                
+                const data = await response.json();
+                if (data.success) {
+                    document.getElementById('userSuccess').textContent = '使用者已刪除！';
+                    document.getElementById('userSuccess').classList.remove('hidden');
+                    loadUsers();
+                } else {
+                    document.getElementById('userError').textContent = '刪除失敗：' + (data.error || '未知錯誤');
+                    document.getElementById('userError').classList.remove('hidden');
+                }
+            } catch (error) {
+                document.getElementById('userError').textContent = '刪除失敗：' + error.message;
+                document.getElementById('userError').classList.remove('hidden');
+            }
+        }
+
+        // 更新檢查登入狀態函數
+        function checkLoginStatus() {
+            const isLoggedIn = localStorage.getItem('adminLoggedIn') === 'true';
+            const isAdmin = localStorage.getItem('isAdmin') === 'true';
+            document.getElementById('loginForm').style.display = isLoggedIn ? 'none' : 'block';
+            document.getElementById('adminPanel').style.display = isLoggedIn ? 'flex' : 'none';
+            
+            // 根據是否為管理員顯示/隱藏使用者管理選項
+            if (document.getElementById('userManageNav')) {
+                document.getElementById('userManageNav').style.display = isAdmin ? 'block' : 'none';
+            }
+            
+            if (isLoggedIn) {
+                loadMenuItems();
+                if (isAdmin) {
+                    loadUsers();
+                }
+            }
+        }
+
+        // 檢查使用者權限
+        function checkPermission() {
+            const permission = localStorage.getItem('userPermission');
+            if (permission === 'view') {
+                // 只控制選單管理面板的按鈕和輸入框
+                const menuPanel = document.getElementById('menuPanel');
+                const editButtons = menuPanel.querySelectorAll('button[onclick^="edit"], button[onclick^="delete"], button[onclick="addMenuItem()"]');
+                editButtons.forEach(button => button.style.display = 'none');
+                document.getElementById('menuTitle').disabled = true;
+                document.getElementById('menuUrl').disabled = true;
+            }
+        }
+
+        // 頁面載入時檢查登入狀態和權限
+        window.onload = () => {
+            checkLoginStatus();
+            checkPermission();
+        };
+
+        // switchPanel 函數更新
+        function switchPanel(panelId) {
+            // 更新導航項目狀態
+            document.querySelectorAll('.nav-item').forEach(item => {
+                item.classList.remove('active');
+            });
+            const activeNav = [...document.querySelectorAll('.nav-item')].find(
+                item => item.textContent.includes(panelId === 'menuPanel' ? '選單管理' : 
+                    (panelId === 'userPanel' ? '使用者管理' : '修改密碼'))
+            );
+            if (activeNav) activeNav.classList.add('active');
+
+            // 更新面板顯示
+            document.querySelectorAll('.panel').forEach(panel => {
+                panel.classList.remove('active');
+            });
+            document.getElementById(panelId).classList.add('active');
+
+            // 切換面板後重新檢查權限
+            setTimeout(checkPermission, 100);
+        }
     </script>
 </body>
 </html>

@@ -54,6 +54,77 @@ app.post('/api/admin/change-password', (req, res) => {
     }
 });
 
+// 新增使用者
+app.post('/api/admin/users', (req, res) => {
+    try {
+        const { username, password, permission } = req.body;
+        if (!username || !password || !permission) {
+            return res.status(400).json({ error: '所有欄位都是必填的' });
+        }
+        
+        if (permission !== 'view' && permission !== 'edit') {
+            return res.status(400).json({ error: '權限類型無效' });
+        }
+
+        const adminData = JSON.parse(fs.readFileSync(adminDataPath, 'utf8'));
+        
+        // 檢查使用者名稱是否已存在
+        if (adminData.users.some(user => user.username === username)) {
+            return res.status(400).json({ error: '使用者名稱已存在' });
+        }
+
+        // 新增使用者
+        const hashedPassword = crypto.createHash('md5').update(password).digest('hex');
+        adminData.users.push({
+            username,
+            password: hashedPassword,
+            permission,
+            isAdmin: false
+        });
+
+        fs.writeFileSync(adminDataPath, JSON.stringify(adminData, null, 4));
+        res.json({ success: true, message: '使用者創建成功' });
+    } catch (err) {
+        res.status(500).json({ error: '創建使用者失敗' });
+    }
+});
+
+// 獲取所有使用者
+app.get('/api/admin/users', (req, res) => {
+    try {
+        const adminData = JSON.parse(fs.readFileSync(adminDataPath, 'utf8'));
+        // 返回使用者列表，但不包含密碼
+        const users = adminData.users.map(({ password, ...user }) => user);
+        res.json(users);
+    } catch (err) {
+        res.status(500).json({ error: '獲取使用者列表失敗' });
+    }
+});
+
+// 刪除使用者
+app.delete('/api/admin/users/:username', (req, res) => {
+    try {
+        const { username } = req.params;
+        const adminData = JSON.parse(fs.readFileSync(adminDataPath, 'utf8'));
+        
+        const userIndex = adminData.users.findIndex(user => user.username === username);
+        if (userIndex === -1) {
+            return res.status(404).json({ error: '找不到該使用者' });
+        }
+
+        // 不允許刪除管理員
+        if (adminData.users[userIndex].isAdmin) {
+            return res.status(403).json({ error: '無法刪除管理員帳號' });
+        }
+
+        adminData.users.splice(userIndex, 1);
+        fs.writeFileSync(adminDataPath, JSON.stringify(adminData, null, 4));
+        res.json({ success: true, message: '使用者已刪除' });
+    } catch (err) {
+        res.status(500).json({ error: '刪除使用者失敗' });
+    }
+});
+
 app.post('/api/admin/login', (req, res) => {
     try {
         const { username, password } = req.body;
@@ -62,8 +133,13 @@ app.post('/api/admin/login', (req, res) => {
         // 計算密碼的 MD5 雜湊
         const hashedPassword = crypto.createHash('md5').update(password).digest('hex');
         
-        if (username === adminData.username && hashedPassword === adminData.password) {
-            res.json({ success: true });
+        const user = adminData.users.find(u => u.username === username && u.password === hashedPassword);
+        if (user) {
+            res.json({ 
+                success: true,
+                isAdmin: user.isAdmin,
+                permission: user.permission 
+            });
         } else {
             res.status(401).json({ error: '帳號或密碼錯誤' });
         }
@@ -83,7 +159,34 @@ app.get('/api/menu', (req, res) => {
 });
 
 // 新增選單項目
-app.post('/api/menu', (req, res) => {
+// 驗證使用者權限的中間件
+const checkPermission = (permission) => {
+    return async (req, res, next) => {
+        try {
+            const { username } = req.body;
+            if (!username) {
+                return res.status(401).json({ error: '未提供使用者資訊' });
+            }
+
+            const adminData = JSON.parse(fs.readFileSync(adminDataPath, 'utf8'));
+            const user = adminData.users.find(u => u.username === username);
+            
+            if (!user) {
+                return res.status(401).json({ error: '未找到使用者' });
+            }
+
+            if (user.permission !== permission && !user.isAdmin) {
+                return res.status(403).json({ error: '權限不足' });
+            }
+
+            next();
+        } catch (err) {
+            res.status(500).json({ error: '權限驗證失敗' });
+        }
+    };
+};
+
+app.post('/api/menu', checkPermission('edit'), (req, res) => {
     try {
         const { title, url } = req.body;
         if (!title || !url) {
@@ -105,7 +208,7 @@ app.post('/api/menu', (req, res) => {
 });
 
 // 更新選單項目
-app.put('/api/menu/:id', (req, res) => {
+app.put('/api/menu/:id', checkPermission('edit'), (req, res) => {
     try {
         const { id } = req.params;
         const { title, url } = req.body;
@@ -134,7 +237,7 @@ app.put('/api/menu/:id', (req, res) => {
 });
 
 // 刪除選單項目
-app.delete('/api/menu/:id', (req, res) => {
+app.delete('/api/menu/:id', checkPermission('edit'), (req, res) => {
     try {
         const { id } = req.params;
         const menuData = JSON.parse(fs.readFileSync(menuDataPath, 'utf8'));

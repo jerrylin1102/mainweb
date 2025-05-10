@@ -1,4 +1,22 @@
 {
-    "username": "admin",
-    "password": "2bde93c0f645b28b3e352fd5e8bb1265"
+    "users": [
+        {
+            "username": "admin",
+            "password": "2bde93c0f645b28b3e352fd5e8bb1265",
+            "permission": "edit",
+            "isAdmin": true
+        },
+        {
+            "username": "user01",
+            "password": "511db92bcadf559df7db45d4fea4ddfe",
+            "permission": "view",
+            "isAdmin": false
+        },
+        {
+            "username": "user02",
+            "password": "511db92bcadf559df7db45d4fea4ddfe",
+            "permission": "edit",
+            "isAdmin": false
+        }
+    ]
 }
