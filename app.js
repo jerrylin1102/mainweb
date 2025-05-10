@@ -31,6 +31,29 @@ const adminDataPath = path.join(__dirname, 'data/admin.json');
 const menuDataPath = path.join(__dirname, 'data/menu.json');
 
 // 驗證管理員登入
+// 修改管理員密碼
+app.post('/api/admin/change-password', (req, res) => {
+    try {
+        const { currentPassword, newPassword } = req.body;
+        const adminData = JSON.parse(fs.readFileSync(adminDataPath, 'utf8'));
+        
+        // 驗證當前密碼
+        const hashedCurrentPassword = crypto.createHash('md5').update(currentPassword).digest('hex');
+        if (hashedCurrentPassword !== adminData.password) {
+            return res.status(401).json({ error: '當前密碼錯誤' });
+        }
+        
+        // 更新新密碼
+        const hashedNewPassword = crypto.createHash('md5').update(newPassword).digest('hex');
+        adminData.password = hashedNewPassword;
+        
+        fs.writeFileSync(adminDataPath, JSON.stringify(adminData, null, 4));
+        res.json({ success: true, message: '密碼修改成功' });
+    } catch (err) {
+        res.status(500).json({ error: '密碼修改失敗' });
+    }
+});
+
 app.post('/api/admin/login', (req, res) => {
     try {
         const { username, password } = req.body;

@@ -1,3 +1,9 @@
 {
-    "menuItems": []
+    "menuItems": [
+        {
+            "id": "1746904127224",
+            "title": "test",
+            "url": "https://salarycount.site"
+        }
+    ]
 }

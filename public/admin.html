@@ -4,66 +4,7 @@
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
     <title>後台管理系統</title>
-    <style>
-        body {
-            font-family: Arial, sans-serif;
-            margin: 0;
-            padding: 20px;
-            background: #f5f5f5;
-        }
-        .container {
-            max-width: 800px;
-            margin: 0 auto;
-            background: white;
-            padding: 20px;
-            border-radius: 8px;
-            box-shadow: 0 2px 4px rgba(0,0,0,0.1);
-        }
-        .login-form, .menu-manager {
-            margin-bottom: 20px;
-        }
-        h2 {
-            color: #333;
-            margin-bottom: 20px;
-        }
-        input, button {
-            padding: 8px 12px;
-            margin: 5px 0;
-            border: 1px solid #ddd;
-            border-radius: 4px;
-        }
-        button {
-            background: #007bff;
-            color: white;
-            border: none;
-            cursor: pointer;
-            margin-right: 5px;
-        }
-        button:hover {
-            background: #0056b3;
-        }
-        table {
-            width: 100%;
-            border-collapse: collapse;
-            margin-top: 20px;
-        }
-        th, td {
-            padding: 12px;
-            text-align: left;
-            border-bottom: 1px solid #ddd;
-        }
-        .hidden {
-            display: none;
-        }
-        .error {
-            color: red;
-            margin: 10px 0;
-        }
-        .success {
-            color: green;
-            margin: 10px 0;
-        }
-    </style>
+    <link rel="stylesheet" href="./admin.css">
 </head>
 <body>
     <div class="container">
@@ -82,28 +23,61 @@
             <div id="loginError" class="error"></div>
         </div>
 
-        <!-- 選單管理 -->
-        <div id="menuManager" class="menu-manager hidden">
-            <h2>選單管理</h2>
-            <div>
-                <input type="text" id="menuTitle" placeholder="選單項目名稱" required>
-                <input type="text" id="menuUrl" placeholder="連結網址" required>
-                <button onclick="addMenuItem()">新增選單項目</button>
-                <button onclick="logout()" style="background: #dc3545;">登出</button>
+        <!-- 管理面板 -->
+        <div id="adminPanel" class="admin-panel hidden">
+            <!-- 側邊欄 -->
+            <div class="sidebar">
+                <div class="nav-item active" onclick="switchPanel('menuPanel')">選單管理</div>
+                <div class="nav-item" onclick="switchPanel('passwordPanel')">修改密碼</div>
+                <div class="nav-item" onclick="logout()" style="margin-top: auto;">登出系統</div>
             </div>
-            <div id="menuError" class="error"></div>
-            <div id="menuSuccess" class="success"></div>
-            <table>
-                <thead>
-                    <tr>
-                        <th>名稱</th>
-                        <th>連結</th>
-                        <th>操作</th>
-                    </tr>
-                </thead>
-                <tbody id="menuItems">
-                </tbody>
-            </table>
+
+            <!-- 內容區域 -->
+            <div class="content">
+                <!-- 選單管理面板 -->
+                <div id="menuPanel" class="panel active">
+                    <h2>選單管理</h2>
+                    <div class="form-group">
+                        <input type="text" id="menuTitle" placeholder="選單項目名稱" required>
+                    </div>
+                    <div class="form-group">
+                        <input type="text" id="menuUrl" placeholder="連結網址" required>
+                    </div>
+                    <button onclick="addMenuItem()">新增選單項目</button>
+                    <div id="menuError" class="error hidden"></div>
+                    <div id="menuSuccess" class="success hidden"></div>
+                    <div class="table-responsive">
+                        <table>
+                        <thead>
+                            <tr>
+                                <th>名稱</th>
+                                <th>連結</th>
+                                <th>操作</th>
+                            </tr>
+                        </thead>
+                        <tbody id="menuItems">
+                        </tbody>
+                        </table>
+                    </div>
+                </div>
+
+                <!-- 修改密碼面板 -->
+                <div id="passwordPanel" class="panel">
+                    <h2>修改密碼</h2>
+                    <div class="form-group">
+                        <input type="password" id="currentPassword" placeholder="當前密碼" required>
+                    </div>
+                    <div class="form-group">
+                        <input type="password" id="newPassword" placeholder="新密碼" required>
+                    </div>
+                    <div class="form-group">
+                        <input type="password" id="confirmPassword" placeholder="確認新密碼" required>
+                    </div>
+                    <button onclick="changePassword()">更新密碼</button>
+                    <div id="passwordError" class="error hidden"></div>
+                    <div id="passwordSuccess" class="success hidden"></div>
+                </div>
+            </div>
         </div>
     </div>
 
@@ -112,9 +86,78 @@
         function checkLoginStatus() {
             const isLoggedIn = localStorage.getItem('adminLoggedIn') === 'true';
             document.getElementById('loginForm').style.display = isLoggedIn ? 'none' : 'block';
-            document.getElementById('menuManager').style.display = isLoggedIn ? 'block' : 'none';
+            document.getElementById('adminPanel').style.display = isLoggedIn ? 'flex' : 'none';
             if (isLoggedIn) {
                 loadMenuItems();
+            }
+        }
+
+        // 切換面板
+        function switchPanel(panelId) {
+            // 更新導航項目狀態
+            document.querySelectorAll('.nav-item').forEach(item => {
+                item.classList.remove('active');
+            });
+            const activeNav = [...document.querySelectorAll('.nav-item')].find(
+                item => item.textContent.includes(panelId === 'menuPanel' ? '選單管理' : '修改密碼')
+            );
+            if (activeNav) activeNav.classList.add('active');
+
+            // 更新面板顯示
+            document.querySelectorAll('.panel').forEach(panel => {
+                panel.classList.remove('active');
+            });
+            document.getElementById(panelId).classList.add('active');
+        }
+
+        // 修改密碼
+        async function changePassword() {
+            const currentPassword = document.getElementById('currentPassword').value;
+            const newPassword = document.getElementById('newPassword').value;
+            const confirmPassword = document.getElementById('confirmPassword').value;
+
+            // 清除之前的提示訊息
+            document.getElementById('passwordError').classList.add('hidden');
+            document.getElementById('passwordSuccess').classList.add('hidden');
+
+            // 驗證新密碼
+            if (newPassword !== confirmPassword) {
+                document.getElementById('passwordError').textContent = '新密碼與確認密碼不符';
+                document.getElementById('passwordError').classList.remove('hidden');
+                return;
+            }
+
+            if (newPassword.length < 6) {
+                document.getElementById('passwordError').textContent = '新密碼長度至少需要6個字符';
+                document.getElementById('passwordError').classList.remove('hidden');
+                return;
+            }
+
+            try {
+                const response = await fetch('/api/admin/change-password', {
+                    method: 'POST',
+                    headers: {
+                        'Content-Type': 'application/json',
+                    },
+                    body: JSON.stringify({ currentPassword, newPassword })
+                });
+
+                const data = await response.json();
+
+                if (data.success) {
+                    document.getElementById('passwordSuccess').textContent = '密碼修改成功！';
+                    document.getElementById('passwordSuccess').classList.remove('hidden');
+                    // 清空輸入框
+                    document.getElementById('currentPassword').value = '';
+                    document.getElementById('newPassword').value = '';
+                    document.getElementById('confirmPassword').value = '';
+                } else {
+                    document.getElementById('passwordError').textContent = '密碼修改失敗：' + (data.error || '未知錯誤');
+                    document.getElementById('passwordError').classList.remove('hidden');
+                }
+            } catch (error) {
+                document.getElementById('passwordError').textContent = '密碼修改失敗：' + error.message;
+                document.getElementById('passwordError').classList.remove('hidden');
             }
         }
 
