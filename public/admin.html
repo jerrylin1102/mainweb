@@ -1,0 +1,270 @@
+<!DOCTYPE html>
+<html lang="zh-Hant">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>後台管理系統</title>
+    <style>
+        body {
+            font-family: Arial, sans-serif;
+            margin: 0;
+            padding: 20px;
+            background: #f5f5f5;
+        }
+        .container {
+            max-width: 800px;
+            margin: 0 auto;
+            background: white;
+            padding: 20px;
+            border-radius: 8px;
+            box-shadow: 0 2px 4px rgba(0,0,0,0.1);
+        }
+        .login-form, .menu-manager {
+            margin-bottom: 20px;
+        }
+        h2 {
+            color: #333;
+            margin-bottom: 20px;
+        }
+        input, button {
+            padding: 8px 12px;
+            margin: 5px 0;
+            border: 1px solid #ddd;
+            border-radius: 4px;
+        }
+        button {
+            background: #007bff;
+            color: white;
+            border: none;
+            cursor: pointer;
+            margin-right: 5px;
+        }
+        button:hover {
+            background: #0056b3;
+        }
+        table {
+            width: 100%;
+            border-collapse: collapse;
+            margin-top: 20px;
+        }
+        th, td {
+            padding: 12px;
+            text-align: left;
+            border-bottom: 1px solid #ddd;
+        }
+        .hidden {
+            display: none;
+        }
+        .error {
+            color: red;
+            margin: 10px 0;
+        }
+        .success {
+            color: green;
+            margin: 10px 0;
+        }
+    </style>
+</head>
+<body>
+    <div class="container">
+        <!-- 登入表單 -->
+        <div id="loginForm" class="login-form">
+            <h2>管理員登入</h2>
+            <div>
+                <input type="text" id="username" placeholder="帳號" required>
+            </div>
+            <div>
+                <input type="password" id="password" placeholder="密碼" required>
+            </div>
+            <div>
+                <button onclick="login()">登入</button>
+            </div>
+            <div id="loginError" class="error"></div>
+        </div>
+
+        <!-- 選單管理 -->
+        <div id="menuManager" class="menu-manager hidden">
+            <h2>選單管理</h2>
+            <div>
+                <input type="text" id="menuTitle" placeholder="選單項目名稱" required>
+                <input type="text" id="menuUrl" placeholder="連結網址" required>
+                <button onclick="addMenuItem()">新增選單項目</button>
+                <button onclick="logout()" style="background: #dc3545;">登出</button>
+            </div>
+            <div id="menuError" class="error"></div>
+            <div id="menuSuccess" class="success"></div>
+            <table>
+                <thead>
+                    <tr>
+                        <th>名稱</th>
+                        <th>連結</th>
+                        <th>操作</th>
+                    </tr>
+                </thead>
+                <tbody id="menuItems">
+                </tbody>
+            </table>
+        </div>
+    </div>
+
+    <script>
+        // 檢查是否已登入
+        function checkLoginStatus() {
+            const isLoggedIn = localStorage.getItem('adminLoggedIn') === 'true';
+            document.getElementById('loginForm').style.display = isLoggedIn ? 'none' : 'block';
+            document.getElementById('menuManager').style.display = isLoggedIn ? 'block' : 'none';
+            if (isLoggedIn) {
+                loadMenuItems();
+            }
+        }
+
+        // 登入功能
+        async function login() {
+            const username = document.getElementById('username').value;
+            const password = document.getElementById('password').value;
+            
+            try {
+                const response = await fetch('/api/admin/login', {
+                    method: 'POST',
+                    headers: {
+                        'Content-Type': 'application/json',
+                    },
+                    body: JSON.stringify({ username, password })
+                });
+                
+                const data = await response.json();
+                
+                if (data.success) {
+                    localStorage.setItem('adminLoggedIn', 'true');
+                    checkLoginStatus();
+                } else {
+                    document.getElementById('loginError').textContent = '登入失敗：' + (data.error || '帳號或密碼錯誤');
+                }
+            } catch (error) {
+                document.getElementById('loginError').textContent = '登入失敗：' + error.message;
+            }
+        }
+
+        // 登出功能
+        function logout() {
+            localStorage.removeItem('adminLoggedIn');
+            checkLoginStatus();
+        }
+
+        // 載入選單項目
+        async function loadMenuItems() {
+            try {
+                const response = await fetch('/api/menu');
+                const data = await response.json();
+                const menuItems = document.getElementById('menuItems');
+                menuItems.innerHTML = '';
+                
+                data.menuItems.forEach(item => {
+                    const row = document.createElement('tr');
+                    row.innerHTML = `
+                        <td>${item.title}</td>
+                        <td>${item.url}</td>
+                        <td>
+                            <button onclick="editMenuItem('${item.id}', '${item.title}', '${item.url}')" style="background: #28a745;">編輯</button>
+                            <button onclick="deleteMenuItem('${item.id}')" style="background: #dc3545;">刪除</button>
+                        </td>
+                    `;
+                    menuItems.appendChild(row);
+                });
+            } catch (error) {
+                document.getElementById('menuError').textContent = '載入選單項目失敗：' + error.message;
+            }
+        }
+
+        // 新增選單項目
+        async function addMenuItem() {
+            const title = document.getElementById('menuTitle').value;
+            const url = document.getElementById('menuUrl').value;
+            
+            try {
+                const response = await fetch('/api/menu', {
+                    method: 'POST',
+                    headers: {
+                        'Content-Type': 'application/json',
+                    },
+                    body: JSON.stringify({ title, url })
+                });
+                
+                if (response.ok) {
+                    document.getElementById('menuTitle').value = '';
+                    document.getElementById('menuUrl').value = '';
+                    document.getElementById('menuSuccess').textContent = '新增成功！';
+                    loadMenuItems();
+                    setTimeout(() => {
+                        document.getElementById('menuSuccess').textContent = '';
+                    }, 3000);
+                } else {
+                    const data = await response.json();
+                    document.getElementById('menuError').textContent = '新增失敗：' + (data.error || '未知錯誤');
+                }
+            } catch (error) {
+                document.getElementById('menuError').textContent = '新增失敗：' + error.message;
+            }
+        }
+
+        // 編輯選單項目
+        async function editMenuItem(id, oldTitle, oldUrl) {
+            const newTitle = prompt('請輸入新的選單項目名稱：', oldTitle);
+            if (!newTitle) return;
+            
+            const newUrl = prompt('請輸入新的連結網址：', oldUrl);
+            if (!newUrl) return;
+            
+            try {
+                const response = await fetch(`/api/menu/${id}`, {
+                    method: 'PUT',
+                    headers: {
+                        'Content-Type': 'application/json',
+                    },
+                    body: JSON.stringify({ title: newTitle, url: newUrl })
+                });
+                
+                if (response.ok) {
+                    document.getElementById('menuSuccess').textContent = '更新成功！';
+                    loadMenuItems();
+                    setTimeout(() => {
+                        document.getElementById('menuSuccess').textContent = '';
+                    }, 3000);
+                } else {
+                    const data = await response.json();
+                    document.getElementById('menuError').textContent = '更新失敗：' + (data.error || '未知錯誤');
+                }
+            } catch (error) {
+                document.getElementById('menuError').textContent = '更新失敗：' + error.message;
+            }
+        }
+
+        // 刪除選單項目
+        async function deleteMenuItem(id) {
+            if (!confirm('確定要刪除這個選單項目嗎？')) return;
+            
+            try {
+                const response = await fetch(`/api/menu/${id}`, {
+                    method: 'DELETE'
+                });
+                
+                if (response.ok) {
+                    document.getElementById('menuSuccess').textContent = '刪除成功！';
+                    loadMenuItems();
+                    setTimeout(() => {
+                        document.getElementById('menuSuccess').textContent = '';
+                    }, 3000);
+                } else {
+                    const data = await response.json();
+                    document.getElementById('menuError').textContent = '刪除失敗：' + (data.error || '未知錯誤');
+                }
+            } catch (error) {
+                document.getElementById('menuError').textContent = '刪除失敗：' + error.message;
+            }
+        }
+
+        // 頁面載入時檢查登入狀態
+        window.onload = checkLoginStatus;
+    </script>
+</body>
+</html>

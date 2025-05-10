@@ -145,6 +145,42 @@ const toggleTheme = () => {
 };
 
 document.addEventListener('DOMContentLoaded', () => {
+    // 漢堡選單功能
+    const hamburgerMenu = document.getElementById('hamburgerMenu');
+    const menuOverlay = document.getElementById('menuOverlay');
+    const menuItems = document.getElementById('menuItems');
+
+    // 載入選單項目
+    const loadMenuItems = async () => {
+        try {
+            const response = await fetch('/api/menu');
+            const data = await response.json();
+            menuItems.innerHTML = data.menuItems
+                .map(item => `<a href="${item.url}" target="_blank">${item.title}</a>`)
+                .join('');
+        } catch (error) {
+            console.error('載入選單項目失敗：', error);
+        }
+    };
+
+    // 切換選單
+    const toggleMenu = () => {
+        hamburgerMenu.classList.toggle('active');
+        menuOverlay.classList.toggle('active');
+    };
+
+    hamburgerMenu.addEventListener('click', toggleMenu);
+    document.addEventListener('click', (e) => {
+        if (menuOverlay.classList.contains('active') && 
+            !menuOverlay.contains(e.target) && 
+            !hamburgerMenu.contains(e.target)) {
+            toggleMenu();
+        }
+    });
+
+    // 初始載入選單項目
+    loadMenuItems();
+
     // 原來的按鈕初始化
     document.querySelectorAll('.contact-btn').forEach(btn => {
         if (btn.textContent === '聯絡我') {

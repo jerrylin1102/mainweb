@@ -4,6 +4,7 @@ const TelegramBot = require('node-telegram-bot-api');
 const path = require('path');
 const fs = require('fs');
 const cors = require('cors');
+const crypto = require('crypto');
 require('dotenv').config();
 
 const app = express();
@@ -24,6 +25,109 @@ requiredEnv.forEach(key => {
 app.use(express.json());
 app.use(cors());
 app.use(express.static(path.join(__dirname, 'public')));
+
+// 讀取管理員信息
+const adminDataPath = path.join(__dirname, 'data/admin.json');
+const menuDataPath = path.join(__dirname, 'data/menu.json');
+
+// 驗證管理員登入
+app.post('/api/admin/login', (req, res) => {
+    try {
+        const { username, password } = req.body;
+        const adminData = JSON.parse(fs.readFileSync(adminDataPath, 'utf8'));
+        
+        // 計算密碼的 MD5 雜湊
+        const hashedPassword = crypto.createHash('md5').update(password).digest('hex');
+        
+        if (username === adminData.username && hashedPassword === adminData.password) {
+            res.json({ success: true });
+        } else {
+            res.status(401).json({ error: '帳號或密碼錯誤' });
+        }
+    } catch (err) {
+        res.status(500).json({ error: '登入失敗' });
+    }
+});
+
+// 獲取選單項目
+app.get('/api/menu', (req, res) => {
+    try {
+        const menuData = JSON.parse(fs.readFileSync(menuDataPath, 'utf8'));
+        res.json(menuData);
+    } catch (err) {
+        res.status(500).json({ error: '無法獲取選單項目' });
+    }
+});
+
+// 新增選單項目
+app.post('/api/menu', (req, res) => {
+    try {
+        const { title, url } = req.body;
+        if (!title || !url) {
+            return res.status(400).json({ error: '標題和URL都是必須的' });
+        }
+
+        const menuData = JSON.parse(fs.readFileSync(menuDataPath, 'utf8'));
+        const newItem = {
+            id: Date.now().toString(),
+            title,
+            url
+        };
+        menuData.menuItems.push(newItem);
+        fs.writeFileSync(menuDataPath, JSON.stringify(menuData, null, 4));
+        res.json(newItem);
+    } catch (err) {
+        res.status(500).json({ error: '無法新增選單項目' });
+    }
+});
+
+// 更新選單項目
+app.put('/api/menu/:id', (req, res) => {
+    try {
+        const { id } = req.params;
+        const { title, url } = req.body;
+        if (!title || !url) {
+            return res.status(400).json({ error: '標題和URL都是必須的' });
+        }
+
+        const menuData = JSON.parse(fs.readFileSync(menuDataPath, 'utf8'));
+        const itemIndex = menuData.menuItems.findIndex(item => item.id === id);
+        
+        if (itemIndex === -1) {
+            return res.status(404).json({ error: '找不到該選單項目' });
+        }
+
+        menuData.menuItems[itemIndex] = {
+            ...menuData.menuItems[itemIndex],
+            title,
+            url
+        };
+
+        fs.writeFileSync(menuDataPath, JSON.stringify(menuData, null, 4));
+        res.json(menuData.menuItems[itemIndex]);
+    } catch (err) {
+        res.status(500).json({ error: '無法更新選單項目' });
+    }
+});
+
+// 刪除選單項目
+app.delete('/api/menu/:id', (req, res) => {
+    try {
+        const { id } = req.params;
+        const menuData = JSON.parse(fs.readFileSync(menuDataPath, 'utf8'));
+        const itemIndex = menuData.menuItems.findIndex(item => item.id === id);
+        
+        if (itemIndex === -1) {
+            return res.status(404).json({ error: '找不到該選單項目' });
+        }
+
+        menuData.menuItems.splice(itemIndex, 1);
+        fs.writeFileSync(menuDataPath, JSON.stringify(menuData, null, 4));
+        res.json({ success: true });
+    } catch (err) {
+        res.status(500).json({ error: '無法刪除選單項目' });
+    }
+});
 
 const visitorCountFile = path.join(__dirname, 'visitorCount.json');
 let visitorCount = 0;
