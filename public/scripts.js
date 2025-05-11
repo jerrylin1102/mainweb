@@ -217,11 +217,19 @@ document.addEventListener('DOMContentLoaded', () => {
     document.querySelector('.close-popup')?.addEventListener('click', togglePopup);
     backToTop?.addEventListener('click', scrollToTop);
 
-    const savedTheme = localStorage.getItem('theme');
+    const savedTheme = localStorage.getItem('theme') || 'light';
+    const themeToggle = document.querySelector('.switch input');
+    
     if (savedTheme === 'dark') {
         document.body.classList.add('dark-mode');
+        if (themeToggle) themeToggle.checked = true;
+    } else {
+        document.body.classList.remove('dark-mode');
+        localStorage.setItem('theme', 'light');
+        if (themeToggle) themeToggle.checked = false;
     }
-    document.querySelector('.theme-toggle')?.addEventListener('click', toggleTheme);
+    
+    themeToggle?.addEventListener('change', toggleTheme);
 
     updateTime();
     setInterval(updateTime, 1000);
