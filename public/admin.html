@@ -172,7 +172,20 @@
                 item.classList.remove('active');
             });
             const activeNav = [...document.querySelectorAll('.nav-item')].find(
-                item => item.textContent.includes(panelId === 'menuPanel' ? '選單管理' : '修改密碼')
+                item => {
+                    switch(panelId) {
+                        case 'menuPanel':
+                            return item.textContent.includes('選單管理');
+                        case 'announcementPanel':
+                            return item.textContent.includes('布告欄管理');
+                        case 'userPanel':
+                            return item.textContent.includes('使用者管理');
+                        case 'passwordPanel':
+                            return item.textContent.includes('修改密碼');
+                        default:
+                            return false;
+                    }
+                }
             );
             if (activeNav) activeNav.classList.add('active');
 
@@ -181,6 +194,9 @@
                 panel.classList.remove('active');
             });
             document.getElementById(panelId).classList.add('active');
+
+            // 切換面板後重新檢查權限
+            setTimeout(checkPermission, 100);
         }
 
         // 修改密碼
@@ -894,40 +910,6 @@
                 document.getElementById('announcementError').textContent = '刪除失敗：' + error.message;
                 document.getElementById('announcementError').classList.remove('hidden');
             }
-        }
-
-        // switchPanel 函數更新
-        function switchPanel(panelId) {
-            // 更新導航項目狀態
-            document.querySelectorAll('.nav-item').forEach(item => {
-                item.classList.remove('active');
-            });
-            const activeNav = [...document.querySelectorAll('.nav-item')].find(
-                item => {
-                    switch(panelId) {
-                        case 'menuPanel':
-                            return item.textContent.includes('選單管理');
-                        case 'announcementPanel':
-                            return item.textContent.includes('布告欄管理');
-                        case 'userPanel':
-                            return item.textContent.includes('使用者管理');
-                        case 'passwordPanel':
-                            return item.textContent.includes('修改密碼');
-                        default:
-                            return false;
-                    }
-                }
-            );
-            if (activeNav) activeNav.classList.add('active');
-
-            // 更新面板顯示
-            document.querySelectorAll('.panel').forEach(panel => {
-                panel.classList.remove('active');
-            });
-            document.getElementById(panelId).classList.add('active');
-
-            // 切換面板後重新檢查權限
-            setTimeout(checkPermission, 100);
         }
     </script>
 </body>
