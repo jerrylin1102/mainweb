@@ -830,3 +830,132 @@ input:checked + .slider:before {
         width: 220px;
     }
 }
+
+/* 布告欄樣式 */
+.announcement-section {
+    position: fixed;
+    top: 80px;
+    right: 20px;
+    width: 300px;
+    max-height: calc(100vh - 100px);
+    background: rgba(255, 255, 255, 0.15);
+    backdrop-filter: blur(10px);
+    border-radius: 15px;
+    padding: 20px;
+    overflow-y: auto;
+    z-index: 5;
+}
+
+.announcement-section h2 {
+    color: var(--text-color);
+    margin-bottom: 15px;
+    font-size: 1.2em;
+    text-align: center;
+}
+
+#announcement-list {
+    display: flex;
+    flex-direction: column;
+    gap: 15px;
+}
+
+.announcement-item {
+    background: rgba(255, 255, 255, 0.2);
+    padding: 15px;
+    border-radius: 10px;
+    cursor: pointer;
+    transition: transform 0.3s ease;
+}
+
+.announcement-item:hover {
+    transform: translateY(-3px);
+}
+
+.announcement-item h3 {
+    color: var(--text-color);
+    font-size: 1.1em;
+    margin-bottom: 8px;
+}
+
+.announcement-item p {
+    color: var(--text-color);
+    font-size: 0.9em;
+    opacity: 0.9;
+    display: -webkit-box;
+    -webkit-line-clamp: 3;
+    -webkit-box-orient: vertical;
+    overflow: hidden;
+}
+
+/* 布告欄詳細內容彈窗 */
+.announcement-modal {
+    position: fixed;
+    top: 0;
+    left: 0;
+    width: 100%;
+    height: 100%;
+    background: rgba(0, 0, 0, 0.6);
+    display: flex;
+    justify-content: center;
+    align-items: center;
+    z-index: 50;
+    opacity: 0;
+    visibility: hidden;
+    transition: all 0.3s ease;
+}
+
+.announcement-modal.active {
+    opacity: 1;
+    visibility: visible;
+}
+
+.announcement-content {
+    background: white;
+    padding: 30px;
+    border-radius: 15px;
+    width: 90%;
+    max-width: 600px;
+    max-height: 80vh;
+    overflow-y: auto;
+    position: relative;
+    transform: scale(0.8);
+    transition: transform 0.3s ease;
+}
+
+.announcement-modal.active .announcement-content {
+    transform: scale(1);
+}
+
+.announcement-content h3 {
+    color: #333;
+    font-size: 1.5em;
+    margin-bottom: 20px;
+}
+
+.announcement-content #announcement-body {
+    color: #666;
+    line-height: 1.6;
+    font-size: 1.1em;
+}
+
+.announcement-content .close-announcement {
+    margin-top: 20px;
+}
+
+/* RWD調整 */
+@media (max-width: 768px) {
+    .announcement-section {
+        position: relative;
+        top: 0;
+        right: 0;
+        width: 100%;
+        max-width: none;
+        margin: 20px 0;
+        order: -1;
+    }
+
+    .announcement-content {
+        width: 95%;
+        padding: 20px;
+    }
+}

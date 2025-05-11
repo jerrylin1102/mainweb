@@ -144,7 +144,51 @@ const toggleTheme = () => {
     localStorage.setItem('theme', isDarkMode ? 'dark' : 'light');
 };
 
+// 布告欄功能
+const loadAnnouncements = async () => {
+    try {
+        const response = await fetch('/api/announcements');
+        const data = await response.json();
+        const announcementList = document.getElementById('announcement-list');
+        announcementList.innerHTML = '';
+        
+        data.announcements.forEach(item => {
+            const announcementEl = document.createElement('div');
+            announcementEl.className = 'announcement-item';
+            announcementEl.innerHTML = `
+                <h3>${item.title}</h3>
+                <p>${item.content}</p>
+            `;
+            announcementEl.onclick = () => showAnnouncementDetail(item);
+            announcementList.appendChild(announcementEl);
+        });
+    } catch (err) {
+        console.error('載入公告失敗:', err);
+    }
+};
+
+const showAnnouncementDetail = (announcement) => {
+    const modal = document.querySelector('.announcement-modal');
+    const titleEl = document.getElementById('announcement-title');
+    const bodyEl = document.getElementById('announcement-body');
+    
+    titleEl.textContent = announcement.title;
+    bodyEl.textContent = announcement.content;
+    modal.classList.add('active');
+};
+
+const closeAnnouncementDetail = () => {
+    const modal = document.querySelector('.announcement-modal');
+    modal.classList.remove('active');
+};
+
 document.addEventListener('DOMContentLoaded', () => {
+    // 載入布告欄內容
+    loadAnnouncements();
+
+    // 布告欄關閉按鈕事件
+    document.querySelector('.close-announcement')?.addEventListener('click', closeAnnouncementDetail);
+
     // 漢堡選單功能
     const hamburgerMenu = document.getElementById('hamburgerMenu');
     const menuOverlay = document.getElementById('menuOverlay');

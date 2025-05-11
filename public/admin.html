@@ -36,6 +36,7 @@
             <!-- 側邊欄 -->
             <div class="sidebar">
                 <div class="nav-item active" onclick="switchPanel('menuPanel')">選單管理</div>
+                <div class="nav-item" onclick="switchPanel('announcementPanel')">布告欄管理</div>
                 <div id="userManageNav" class="nav-item" onclick="switchPanel('userPanel')">使用者管理</div>
                 <div class="nav-item" onclick="switchPanel('passwordPanel')">修改密碼</div>
                 <div class="nav-item" onclick="logout()" style="margin-top: auto;">登出系統</div>
@@ -43,6 +44,33 @@
 
             <!-- 內容區域 -->
             <div class="content">
+                <!-- 布告欄管理面板 -->
+                <div id="announcementPanel" class="panel">
+                    <h2>布告欄管理</h2>
+                    <div class="form-group">
+                        <input type="text" id="announcementTitle" placeholder="公告標題" required>
+                    </div>
+                    <div class="form-group">
+                        <textarea id="announcementContent" placeholder="公告內容" rows="5" style="width: 100%;" required></textarea>
+                    </div>
+                    <button onclick="addAnnouncement()">新增公告</button>
+                    <div id="announcementError" class="error hidden"></div>
+                    <div id="announcementSuccess" class="success hidden"></div>
+                    <div class="table-responsive">
+                        <table>
+                        <thead>
+                            <tr>
+                                <th>標題</th>
+                                <th>內容預覽</th>
+                                <th>發布時間</th>
+                                <th>操作</th>
+                            </tr>
+                        </thead>
+                        <tbody id="announcementItems">
+                        </tbody>
+                        </table>
+                    </div>
+                </div>
                 <!-- 使用者管理面板 -->
                 <div id="userPanel" class="panel">
                     <h2>使用者管理</h2>
@@ -184,7 +212,11 @@
                     headers: {
                         'Content-Type': 'application/json',
                     },
-                    body: JSON.stringify({ currentPassword, newPassword })
+                    body: JSON.stringify({
+                        username: localStorage.getItem('username'),
+                        currentPassword,
+                        newPassword
+                    })
                 });
 
                 const data = await response.json();
@@ -221,8 +253,8 @@
 
         // 登入功能
         async function login() {
-            const username = document.getElementById('username').value;
-            const password = document.getElementById('password').value;
+                const username = document.getElementById('username').value;
+                const password = document.getElementById('password').value;
             
             try {
                 const response = await fetch('/api/admin/login', {
@@ -336,7 +368,7 @@
             const description = document.getElementById('menuDescription').value;
             
             try {
-                const username = document.getElementById('username').value;
+                const username = localStorage.getItem('username');
                 const response = await fetch('/api/menu', {
                     method: 'POST',
                     headers: {
@@ -454,7 +486,7 @@
                 }
 
                 let updateData = {
-                    username: document.getElementById('username').value
+                    username: localStorage.getItem('username')
                 };
 
                 // 如果欄位被勾選，就將其值包含在更新資料中
@@ -519,7 +551,7 @@
             if (!confirm('確定要刪除這個選單項目嗎？')) return;
             
             try {
-                const username = document.getElementById('username').value;
+                const username = localStorage.getItem('username');
                 const response = await fetch(`/api/menu/${id}`, {
                     method: 'DELETE',
                     headers: {
@@ -649,6 +681,7 @@
             
             if (isLoggedIn) {
                 loadMenuItems();
+                loadAnnouncements();
                 if (isAdmin) {
                     loadUsers();
                 }
@@ -659,12 +692,19 @@
         function checkPermission() {
             const permission = localStorage.getItem('userPermission');
             if (permission === 'view') {
-                // 只控制選單管理面板的按鈕和輸入框
+                // 控制選單管理面板的按鈕和輸入框
                 const menuPanel = document.getElementById('menuPanel');
-                const editButtons = menuPanel.querySelectorAll('button[onclick^="edit"], button[onclick^="delete"], button[onclick="addMenuItem()"]');
-                editButtons.forEach(button => button.style.display = 'none');
+                const menuEditButtons = menuPanel.querySelectorAll('button[onclick^="edit"], button[onclick^="delete"], button[onclick="addMenuItem()"]');
+                menuEditButtons.forEach(button => button.style.display = 'none');
                 document.getElementById('menuTitle').disabled = true;
                 document.getElementById('menuUrl').disabled = true;
+
+                // 控制布告欄管理面板的按鈕和輸入框
+                const announcementPanel = document.getElementById('announcementPanel');
+                const announcementEditButtons = announcementPanel.querySelectorAll('button[onclick^="edit"], button[onclick^="delete"], button[onclick="addAnnouncement()"]');
+                announcementEditButtons.forEach(button => button.style.display = 'none');
+                document.getElementById('announcementTitle').disabled = true;
+                document.getElementById('announcementContent').disabled = true;
             }
         }
 
@@ -674,6 +714,188 @@
             checkPermission();
         };
 
+        // 載入布告欄列表
+        async function loadAnnouncements() {
+            try {
+                const response = await fetch('/api/announcements');
+                const data = await response.json();
+                const announcementItems = document.getElementById('announcementItems');
+                announcementItems.innerHTML = '';
+                
+                const userPermission = localStorage.getItem('userPermission');
+                data.announcements.forEach(item => {
+                    const row = document.createElement('tr');
+                    const truncatedContent = item.content.length > 50 ? 
+                        item.content.substring(0, 50) + '...' : 
+                        item.content;
+                    const date = new Date(item.created_at).toLocaleString('zh-TW');
+                    
+                    row.innerHTML = `
+                        <td>${item.title}</td>
+                        <td>${truncatedContent}</td>
+                        <td>${date}</td>
+                        <td class="menu-actions">
+                            ${userPermission === 'edit' ? `
+                                <button onclick="editAnnouncement('${item.id}', this)" style="background: #28a745;">編輯</button>
+                                <button onclick="deleteAnnouncement('${item.id}')" style="background: #dc3545;">刪除</button>
+                            ` : ''}
+                        </td>
+                    `;
+                    announcementItems.appendChild(row);
+                });
+            } catch (error) {
+                document.getElementById('announcementError').textContent = '載入公告失敗：' + error.message;
+            }
+        }
+
+        // 新增布告欄項目
+        async function addAnnouncement() {
+            const title = document.getElementById('announcementTitle').value;
+            const content = document.getElementById('announcementContent').value;
+            
+            if (!title || !content) {
+                document.getElementById('announcementError').textContent = '標題和內容都是必填的';
+                document.getElementById('announcementError').classList.remove('hidden');
+                return;
+            }
+            
+            try {
+                const username = localStorage.getItem('username');
+                const response = await fetch('/api/announcements', {
+                    method: 'POST',
+                    headers: {
+                        'Content-Type': 'application/json',
+                    },
+                    body: JSON.stringify({ title, content, username })
+                });
+                
+                if (response.ok) {
+                    document.getElementById('announcementTitle').value = '';
+                    document.getElementById('announcementContent').value = '';
+                    document.getElementById('announcementSuccess').textContent = '新增成功！';
+                    document.getElementById('announcementSuccess').classList.remove('hidden');
+                    loadAnnouncements();
+                    setTimeout(() => {
+                        document.getElementById('announcementSuccess').classList.add('hidden');
+                    }, 3000);
+                } else {
+                    const data = await response.json();
+                    document.getElementById('announcementError').textContent = '新增失敗：' + (data.error || '未知錯誤');
+                    document.getElementById('announcementError').classList.remove('hidden');
+                }
+            } catch (error) {
+                document.getElementById('announcementError').textContent = '新增失敗：' + error.message;
+                document.getElementById('announcementError').classList.remove('hidden');
+            }
+        }
+
+        // 編輯布告欄項目
+        async function editAnnouncement(id, button) {
+            const row = button.closest('tr');
+            const title = row.cells[0].textContent;
+            const content = await getFullContent(id);
+            
+            const editDialog = document.createElement('div');
+            editDialog.className = 'edit-dialog';
+            editDialog.innerHTML = `
+                <div class="edit-dialog-content">
+                    <h3>編輯公告</h3>
+                    <div class="form-group">
+                        <input type="text" id="editAnnouncementTitle" value="${title}" placeholder="公告標題">
+                    </div>
+                    <div class="form-group">
+                        <textarea id="editAnnouncementContent" placeholder="公告內容" rows="5" style="width: 100%;">${content}</textarea>
+                    </div>
+                    <div class="dialog-buttons">
+                        <button onclick="submitAnnouncementEdit('${id}')" style="background: #28a745;">確定</button>
+                        <button onclick="closeEditDialog()" style="background: #6c757d;">取消</button>
+                    </div>
+                </div>
+            `;
+            document.body.appendChild(editDialog);
+        }
+
+        // 獲取完整內容
+        async function getFullContent(id) {
+            try {
+                const response = await fetch(`/api/announcements/${id}`);
+                const data = await response.json();
+                return data.content || '';
+            } catch (error) {
+                console.error('獲取公告內容失敗:', error);
+                return '';
+            }
+        }
+
+        // 提交編輯
+        async function submitAnnouncementEdit(id) {
+            const title = document.getElementById('editAnnouncementTitle').value;
+            const content = document.getElementById('editAnnouncementContent').value;
+            
+            if (!title || !content) {
+                alert('標題和內容都是必填的');
+                return;
+            }
+            
+            try {
+                const username = localStorage.getItem('username');
+                const response = await fetch(`/api/announcements/${id}`, {
+                    method: 'PUT',
+                    headers: {
+                        'Content-Type': 'application/json',
+                    },
+                    body: JSON.stringify({ title, content, username })
+                });
+                
+                if (response.ok) {
+                    closeEditDialog();
+                    document.getElementById('announcementSuccess').textContent = '更新成功！';
+                    document.getElementById('announcementSuccess').classList.remove('hidden');
+                    loadAnnouncements();
+                    setTimeout(() => {
+                        document.getElementById('announcementSuccess').classList.add('hidden');
+                    }, 3000);
+                } else {
+                    const data = await response.json();
+                    alert('更新失敗：' + (data.error || '未知錯誤'));
+                }
+            } catch (error) {
+                alert('更新失敗：' + error.message);
+            }
+        }
+
+        // 刪除布告欄項目
+        async function deleteAnnouncement(id) {
+            if (!confirm('確定要刪除這個公告嗎？')) return;
+            
+            try {
+                const username = localStorage.getItem('username');
+                const response = await fetch(`/api/announcements/${id}`, {
+                    method: 'DELETE',
+                    headers: {
+                        'Content-Type': 'application/json',
+                    },
+                    body: JSON.stringify({ username })
+                });
+                
+                if (response.ok) {
+                    document.getElementById('announcementSuccess').textContent = '刪除成功！';
+                    document.getElementById('announcementSuccess').classList.remove('hidden');
+                    loadAnnouncements();
+                    setTimeout(() => {
+                        document.getElementById('announcementSuccess').classList.add('hidden');
+                    }, 3000);
+                } else {
+                    const data = await response.json();
+                    document.getElementById('announcementError').textContent = '刪除失敗：' + (data.error || '未知錯誤');
+                    document.getElementById('announcementError').classList.remove('hidden');
+                }
+            } catch (error) {
+                document.getElementById('announcementError').textContent = '刪除失敗：' + error.message;
+                document.getElementById('announcementError').classList.remove('hidden');
+            }
+        }
+
         // switchPanel 函數更新
         function switchPanel(panelId) {
             // 更新導航項目狀態
@@ -681,8 +903,20 @@
                 item.classList.remove('active');
             });
             const activeNav = [...document.querySelectorAll('.nav-item')].find(
-                item => item.textContent.includes(panelId === 'menuPanel' ? '選單管理' : 
-                    (panelId === 'userPanel' ? '使用者管理' : '修改密碼'))
+                item => {
+                    switch(panelId) {
+                        case 'menuPanel':
+                            return item.textContent.includes('選單管理');
+                        case 'announcementPanel':
+                            return item.textContent.includes('布告欄管理');
+                        case 'userPanel':
+                            return item.textContent.includes('使用者管理');
+                        case 'passwordPanel':
+                            return item.textContent.includes('修改密碼');
+                        default:
+                            return false;
+                    }
+                }
             );
             if (activeNav) activeNav.classList.add('active');
 

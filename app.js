@@ -14,6 +14,31 @@ const token = process.env.TELEGRAM_BOT_TOKEN;
 const chatId = process.env.TELEGRAM_CHAT_ID;
 const bot = new TelegramBot(token, { polling: true });
 
+// 驗證使用者權限的中間件
+const checkPermission = (permission) => {
+    return async (req, res, next) => {
+        const { username } = req.body;
+        if (!username) {
+            return res.status(401).json({ error: '未提供使用者資訊' });
+        }
+
+        db.get('SELECT permission, isAdmin FROM users WHERE username = ?',
+            [username],
+            (err, user) => {
+                if (err) {
+                    return res.status(500).json({ error: '權限驗證失敗' });
+                }
+                if (!user) {
+                    return res.status(401).json({ error: '未找到使用者' });
+                }
+                if (user.permission !== permission && user.isAdmin !== 1) {
+                    return res.status(403).json({ error: '權限不足' });
+                }
+                next();
+            });
+    };
+};
+
 // 檢查環境變數
 const requiredEnv = ['TELEGRAM_BOT_TOKEN', 'TELEGRAM_CHAT_ID'];
 requiredEnv.forEach(key => {
@@ -32,6 +57,15 @@ const db = new sqlite3.Database('database.sqlite', (err) => {
     console.log('已連接到SQLite資料庫');
     initializeDatabase();
 });
+
+// 創建布告欄資料表
+db.run(`CREATE TABLE IF NOT EXISTS announcements (
+    id TEXT PRIMARY KEY,
+    title TEXT NOT NULL,
+    content TEXT NOT NULL,
+    created_at DATETIME DEFAULT CURRENT_TIMESTAMP,
+    updated_at DATETIME DEFAULT CURRENT_TIMESTAMP
+)`);
 
 // 初始化資料庫
 function initializeDatabase() {
@@ -106,6 +140,92 @@ app.post('/api/admin/login', (req, res) => {
                 res.status(401).json({ error: '帳號或密碼錯誤' });
             }
         });
+});
+
+// 布告欄 API
+// 獲取單個布告欄項目
+app.get('/api/announcements/:id', (req, res) => {
+    const { id } = req.params;
+    db.get('SELECT * FROM announcements WHERE id = ?', [id], (err, item) => {
+        if (err) {
+            return res.status(500).json({ error: '無法獲取布告欄項目' });
+        }
+        if (!item) {
+            return res.status(404).json({ error: '找不到該布告欄項目' });
+        }
+        res.json(item);
+    });
+});
+
+// 獲取所有布告欄項目
+app.get('/api/announcements', (req, res) => {
+    db.all('SELECT * FROM announcements ORDER BY created_at DESC', (err, items) => {
+        if (err) {
+            return res.status(500).json({ error: '無法獲取布告欄項目' });
+        }
+        res.json({ announcements: items });
+    });
+});
+
+// 新增布告欄項目
+app.post('/api/announcements', checkPermission('edit'), (req, res) => {
+    const { title, content } = req.body;
+    if (!title || !content) {
+        return res.status(400).json({ error: '標題和內容都是必須的' });
+    }
+
+    const id = Date.now().toString();
+    db.run('INSERT INTO announcements (id, title, content) VALUES (?, ?, ?)',
+        [id, title, content],
+        function(err) {
+            if (err) {
+                return res.status(500).json({ error: '無法新增布告欄項目' });
+            }
+            res.json({
+                id,
+                title,
+                content,
+                created_at: new Date().toISOString(),
+                updated_at: new Date().toISOString()
+            });
+        });
+});
+
+// 更新布告欄項目
+app.put('/api/announcements/:id', checkPermission('edit'), (req, res) => {
+    const { id } = req.params;
+    const { title, content } = req.body;
+    
+    if (!title || !content) {
+        return res.status(400).json({ error: '標題和內容都是必須的' });
+    }
+
+    db.run('UPDATE announcements SET title = ?, content = ?, updated_at = CURRENT_TIMESTAMP WHERE id = ?',
+        [title, content, id],
+        function(err) {
+            if (err) {
+                return res.status(500).json({ error: '無法更新布告欄項目' });
+            }
+            if (this.changes === 0) {
+                return res.status(404).json({ error: '找不到該布告欄項目' });
+            }
+            res.json({ success: true });
+        });
+});
+
+// 刪除布告欄項目
+app.delete('/api/announcements/:id', checkPermission('edit'), (req, res) => {
+    const { id } = req.params;
+    
+    db.run('DELETE FROM announcements WHERE id = ?', [id], function(err) {
+        if (err) {
+            return res.status(500).json({ error: '無法刪除布告欄項目' });
+        }
+        if (this.changes === 0) {
+            return res.status(404).json({ error: '找不到該布告欄項目' });
+        }
+        res.json({ success: true });
+    });
 });
 
 // 修改使用者密碼
@@ -190,30 +310,6 @@ app.delete('/api/admin/users/:username', (req, res) => {
     });
 });
 
-// 驗證使用者權限的中間件
-const checkPermission = (permission) => {
-    return async (req, res, next) => {
-        const { username } = req.body;
-        if (!username) {
-            return res.status(401).json({ error: '未提供使用者資訊' });
-        }
-
-        db.get('SELECT permission, isAdmin FROM users WHERE username = ?',
-            [username],
-            (err, user) => {
-                if (err) {
-                    return res.status(500).json({ error: '權限驗證失敗' });
-                }
-                if (!user) {
-                    return res.status(401).json({ error: '未找到使用者' });
-                }
-                if (user.permission !== permission && user.isAdmin !== 1) {
-                    return res.status(403).json({ error: '權限不足' });
-                }
-                next();
-            });
-    };
-};
 
 // 獲取選單項目
 app.get('/api/menu', (req, res) => {
