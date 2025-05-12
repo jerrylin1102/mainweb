@@ -1,0 +1,15 @@
+version: '3'
+
+services:
+  web:
+    build: .
+    container_name: jerry-personal-page
+    restart: unless-stopped
+    ports:
+      - "3004:3004"
+    volumes:
+      - /user/appdata/Main_web_v3/mainweb_main/data:/app/data
+      - .env:/app/.env
+    environment:
+      - NODE_ENV=production
+      - TZ=Asia/Taipei
